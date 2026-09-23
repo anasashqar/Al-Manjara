@@ -50,7 +50,7 @@
     "updater": {
       "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEQxREI4MDc1QzFGQzQ3NTYKUldSV1IvekJkWURiMFViQUh4b3RPYkY3eEE5WDY2dkxPaUNvdEdCVlN4QVp5VnVLeTZVRm5HcmIK",
       "endpoints": [
-        "https://github.com/anasashqar/Woodshop/releases/latest/download/latest.json"
+        "https://github.com/anasashqar/Al-Manjara/releases/latest/download/latest.json"
       ],
       "windows": {
         "installMode": "passive"

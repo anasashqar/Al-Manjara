@@ -53,7 +53,7 @@ package.json (version) ──► git tag v* ──► GitHub Actions (.github/wo
                    ينزّل ← يتحقق من التوقيع ← يثبّت ← يعيد التشغيل
 ```
 
-- رابط الفحص: `https://github.com/anasashqar/Woodshop/releases/latest/download/latest.json`
+- رابط الفحص: `https://github.com/anasashqar/Al-Manjara/releases/latest/download/latest.json`
   (يعمل لأن المستودع **عام**؛ إن جعلته خاصاً ستتوقف التحديثات).
 - البرنامج يرفض أي تحديث غير موقّع بمفتاحنا، فلا يمكن لأحد دفع تحديث مزيّف.
 - يمكن للمستخدم إغلاق الإشعار؛ سيظهر مجدداً في الجلسة التالية.
