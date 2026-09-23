@@ -1,0 +1,20 @@
+/* تأثير المرور على صفوف جداول البيانات: خلفية خفيفة + خط أخضر عند بداية السطر (يمين في RTL).
+   يقتصر على الجداول ذات الرأس (thead) حتى لا يتأثر محتوى السندات المطبوعة، ويستثني صف "لا توجد بيانات". */
+table:has(thead) > tbody > tr > td {
+  transition: background-color 120ms ease;
+}
+
+table:has(thead) > tbody > tr:hover > td:not([colspan]) {
+  background-color: #f2f7f3;
+}
+
+table:has(thead) > tbody > tr:hover > td:not([colspan]):first-child {
+  box-shadow: inset -3px 0 0 #166534;
+}
+
+@media print {
+  table:has(thead) > tbody > tr > td {
+    background-color: transparent !important;
+    box-shadow: none !important;
+  }
+}

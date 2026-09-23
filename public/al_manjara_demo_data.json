@@ -1,0 +1,97 @@
+{
+  "version": 2,
+  "description": "بيانات تجريبية لنظام منجرة الإتقان الفنية",
+  "data": {
+    "orders": [
+      {
+        "id": "ord-101",
+        "orderNumber": "ط-101",
+        "customerName": "بلال عبد الراوق",
+        "customerPhone": "0599148884",
+        "category": "kitchen",
+        "description": "تفصيل مطبخ زان كلاسيكي 5 متر مع خزائن وأدراج هيدروليك",
+        "woodType": "خشب زان روماني مع هيكل ساندويش مقاوم للرطوبة",
+        "dimensions": "طول 5.20م × عمق 65سم",
+        "totalAmount": 18500,
+        "paidAmount": 9778,
+        "remainingAmount": 8722,
+        "status": "in_progress",
+        "orderDate": "2026-09-10",
+        "deliveryDate": "2026-09-28",
+        "notes": "مجدول قسط 4,714 شيكل",
+        "createdAt": 1726750000000,
+        "updatedAt": 1726750000000
+      },
+      {
+        "id": "ord-102",
+        "orderNumber": "ط-102",
+        "customerName": "فاطمة الريس",
+        "customerPhone": "0599146662",
+        "category": "doors",
+        "description": "تفصيل وتركيب أبواب داخلية قشرة سنديان عدد 6 أبواب",
+        "woodType": "سويدي مع قشرة سنديان طبيعي",
+        "dimensions": "210سم × 90سم",
+        "totalAmount": 5200,
+        "paidAmount": 5074,
+        "remainingAmount": 126,
+        "status": "ready",
+        "orderDate": "2026-09-05",
+        "deliveryDate": "2026-09-20",
+        "createdAt": 1726750000000,
+        "updatedAt": 1726750000000
+      },
+      {
+        "id": "ord-103",
+        "orderNumber": "ط-103",
+        "customerName": "وسيم الريفي",
+        "customerPhone": "0599133330",
+        "category": "bedroom",
+        "description": "غرفة نوم رئيسية: خزانة سحاب 3.2م + سرير وتسريحة",
+        "woodType": "MDF تايلندي مع قشرة جوز طبيعي",
+        "dimensions": "خزانة 320سم × 240سم",
+        "totalAmount": 9500,
+        "paidAmount": 9280,
+        "remainingAmount": 220,
+        "status": "new",
+        "orderDate": "2026-09-17",
+        "deliveryDate": "2026-10-05",
+        "createdAt": 1726750000000,
+        "updatedAt": 1726750000000
+      }
+    ],
+    "expenses": [
+      {
+        "id": "exp-201",
+        "expenseNumber": "ص-201",
+        "title": "شراء ألواح خشب إم دي إف 18 ملم",
+        "category": "raw_materials",
+        "amount": 3200,
+        "date": "2026-09-08",
+        "paymentMethod": "بنك فلسطين",
+        "supplierName": "شركة القدس للأخشاب",
+        "createdAt": 1726750000000
+      }
+    ],
+    "paymentMethods": [
+      { "id": "pm-1", "name": "نقداً", "type": "cash", "isActive": true },
+      { "id": "pm-2", "name": "بنك فلسطين", "type": "bank", "isActive": true },
+      { "id": "pm-3", "name": "محفظة بال بي", "type": "wallet", "isActive": true },
+      { "id": "pm-4", "name": "محفظة جوال بي", "type": "wallet", "isActive": true }
+    ],
+    "paymentTransactions": [
+      {
+        "id": "pay-01",
+        "receiptNumber": "W-2026/1001",
+        "type": "customer_in",
+        "relatedId": "ord-101",
+        "partyName": "بلال عبد الراوق",
+        "itemPurpose": "رسم حجز مقعد وتفصيل مطبخ",
+        "amount": 50,
+        "discountAmount": 0,
+        "date": "2026-09-19",
+        "paymentMethod": "نقداً",
+        "createdAt": 1726750000000
+      }
+    ]
+  }
+}
