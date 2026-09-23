@@ -25,6 +25,7 @@ import { PaymentModal } from './components/debts/PaymentModal';
 import { OrderReceiptModal } from './components/orders/OrderReceiptModal';
 import { PinPromptModal } from './components/security/StatsPin';
 import { DialogHost } from './components/common/Dialogs';
+import { UpdateBanner } from './components/update/UpdateBanner';
 import type { Order, Expense, PaymentTransaction, WorkshopSettings } from './types';
 
 export function App() {
@@ -248,6 +249,8 @@ export function App() {
       )}
 
       <DialogHost />
+
+      <UpdateBanner />
 
       <PinPromptModal
         isOpen={askSettingsPin}

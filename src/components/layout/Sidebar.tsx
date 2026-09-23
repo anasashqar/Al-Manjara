@@ -6,9 +6,9 @@ import {
   Wallet, 
   Settings, 
   X,
-  Hammer,
   Layers
 } from 'lucide-react';
+import logo from '../../assets/logo.png';
 
 export type NavSection = 'orders' | 'expenses' | 'financials' | 'settings';
 
@@ -60,9 +60,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
         {/* Brand Header: h-12 with close toggle */}
         <div className="h-12 border-b border-white/10 flex items-center justify-between px-3.5 bg-[#081711] rounded-none">
           <div className="flex items-center gap-2.5">
-            <div className="w-7 h-7 rounded-[4px] bg-white flex items-center justify-center text-[#0e241c] shadow-xs">
-              <Hammer className="w-3.5 h-3.5" />
-            </div>
+            <img src={logo} alt="شعار المنجرة" className="w-9 h-9 object-contain" />
             <div>
               <h1 className="font-bold text-white text-xs sm:text-sm font-display leading-tight whitespace-nowrap">
                 منجرة الإتقان
