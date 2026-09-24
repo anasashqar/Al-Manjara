@@ -325,6 +325,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
           {/* طبقة الإخفاء */}
           <div className="absolute inset-0 bg-white/80 backdrop-blur-[2px] rounded-[4px] flex items-center justify-center z-10">
             <span className="text-slate-400 text-xs sm:text-sm font-medium">غير متوفر حالياً</span>
+            <span className="text-slate-400 text-xs sm:text-sm font-medium block mt-1">للتواصل: م.أنس يوسف الأشقر | 970592215136</span>
           </div>
         </div>
       </div>
