@@ -271,53 +271,61 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
           </h2>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 text-xs sm:text-sm">
-          <button
-            type="button"
-            onClick={handleInjectSample}
-            className="p-3 rounded-[4px] border border-slate-300 hover:border-emerald-600 hover:bg-emerald-50/50 text-right transition-colors"
-          >
-            <div className="font-bold text-slate-900 flex items-center gap-2">
-              <Database className="w-4 h-4 text-emerald-700" />
-              <span>بيانات تجريبية</span>
-            </div>
-          </button>
+        <div className="relative">
+          {/* الأزرار الأصلية - مخفية بالطبقة */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 text-xs sm:text-sm">
+            <button
+              type="button"
+              onClick={handleInjectSample}
+              className="p-3 rounded-[4px] border border-slate-300 hover:border-emerald-600 hover:bg-emerald-50/50 text-right transition-colors"
+            >
+              <div className="font-bold text-slate-900 flex items-center gap-2">
+                <Database className="w-4 h-4 text-emerald-700" />
+                <span>بيانات تجريبية</span>
+              </div>
+            </button>
 
-          <button
-            type="button"
-            onClick={handleWipeClean}
-            className="p-3 rounded-[4px] border border-slate-300 hover:border-rose-600 hover:bg-rose-50/50 text-right transition-colors"
-          >
-            <div className="font-bold text-rose-700 flex items-center gap-2">
-              <Trash2 className="w-4 h-4 text-rose-600" />
-              <span>مسح الكل</span>
-            </div>
-          </button>
+            <button
+              type="button"
+              onClick={handleWipeClean}
+              className="p-3 rounded-[4px] border border-slate-300 hover:border-rose-600 hover:bg-rose-50/50 text-right transition-colors"
+            >
+              <div className="font-bold text-rose-700 flex items-center gap-2">
+                <Trash2 className="w-4 h-4 text-rose-600" />
+                <span>مسح الكل</span>
+              </div>
+            </button>
 
-          <button
-            type="button"
-            onClick={handleExportBackup}
-            className="p-3 rounded-[4px] border border-slate-300 hover:border-slate-400 hover:bg-slate-50 text-right transition-colors"
-          >
-            <div className="font-bold text-slate-900 flex items-center gap-2">
-              <Download className="w-4 h-4 text-slate-600" />
-              <span>تصدير نسخة</span>
-            </div>
-          </button>
+            <button
+              type="button"
+              onClick={handleExportBackup}
+              className="p-3 rounded-[4px] border border-slate-300 hover:border-slate-400 hover:bg-slate-50 text-right transition-colors"
+            >
+              <div className="font-bold text-slate-900 flex items-center gap-2">
+                <Download className="w-4 h-4 text-slate-600" />
+                <span>تصدير نسخة</span>
+              </div>
+            </button>
 
-          <label className="p-3 rounded-[4px] border border-slate-300 hover:border-slate-400 hover:bg-slate-50 text-right transition-colors cursor-pointer">
-            <div className="font-bold text-slate-900 flex items-center gap-2">
-              <Upload className="w-4 h-4 text-slate-600" />
-              <span>استيراد نسخة</span>
-            </div>
-            <input
-              type="file"
-              ref={fileInputRef}
-              onChange={handleImportBackup}
-              accept=".json"
-              className="hidden"
-            />
-          </label>
+            <label className="p-3 rounded-[4px] border border-slate-300 hover:border-slate-400 hover:bg-slate-50 text-right transition-colors cursor-pointer">
+              <div className="font-bold text-slate-900 flex items-center gap-2">
+                <Upload className="w-4 h-4 text-slate-600" />
+                <span>استيراد نسخة</span>
+              </div>
+              <input
+                type="file"
+                ref={fileInputRef}
+                onChange={handleImportBackup}
+                accept=".json"
+                className="hidden"
+              />
+            </label>
+          </div>
+
+          {/* طبقة الإخفاء */}
+          <div className="absolute inset-0 bg-white/80 backdrop-blur-[2px] rounded-[4px] flex items-center justify-center z-10">
+            <span className="text-slate-400 text-xs sm:text-sm font-medium">غير متوفر حالياً</span>
+          </div>
         </div>
       </div>
 

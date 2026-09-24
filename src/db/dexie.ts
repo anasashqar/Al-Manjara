@@ -93,10 +93,10 @@ export const db = new AlManjaraDatabase();
 // Default Palestinian Workshop Settings
 export const DEFAULT_SETTINGS: WorkshopSettings = {
   id: 'current_workshop',
-  workshopName: 'منجرة الإتقان الفنية',
+  workshopName: 'منجرة الإتقان',
   managerName: 'أبو أحمد',
   phone: '0599123456',
-  address: 'فلسطين - المنطقة الصناعية',
+  address: 'دير البلح - البركة',
   currency: 'شيكل',
   receiptFooter: 'المتبقي يستحق عند التسليم والتركيب. شكراً لثقتكم.',
   supabaseUrl: '',
