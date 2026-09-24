@@ -1,0 +1,552 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<title>دليل استخدام المنجرة</title>
+<link rel="stylesheet" href="guide.css">
+<style>
+  /* خطوط هذا المشروع (مسارات guide.css تخص مشروعاً آخر) */
+  @font-face { font-family: "Thmanyah Sans"; src: url("../../src/assets/fonts/sans/thmanyahsans-Regular.woff2") format("woff2"); font-weight: 400; }
+  @font-face { font-family: "Thmanyah Sans"; src: url("../../src/assets/fonts/sans/thmanyahsans-Medium.woff2") format("woff2"); font-weight: 500; }
+  @font-face { font-family: "Thmanyah Sans"; src: url("../../src/assets/fonts/sans/thmanyahsans-Bold.woff2") format("woff2"); font-weight: 700; }
+  @font-face { font-family: "Thmanyah Serif"; src: url("../../src/assets/fonts/display/thmanyahserifdisplay-Bold.woff2") format("woff2"); font-weight: 700; }
+  @font-face { font-family: "Thmanyah Serif"; src: url("../../src/assets/fonts/display/thmanyahserifdisplay-Black.woff2") format("woff2"); font-weight: 900; }
+
+  /* ألوان واجهة المنجرة (tailwind.config.js ومكونات src/components) */
+  :root {
+    --app-action: #166534;
+    --app-dark: #0e241c;
+    --app-active: #ea580c;
+    --app-ink: #0f172a;
+    --app-muted: #64748b;
+    --app-border: #cbd5e1;
+    --app-soft: #f1f5f9;
+  }
+
+  /* الأزرار كما في النظام */
+  .bt.s { border: none; color: #475569; }                                   /* سند، الحساب، الافتراضي */
+  .bt.sb { background: #f8fafc; color: #334155; border: .25mm solid #cbd5e1; font-weight: 500; } /* رفع إشعار */
+  .bt.o { color: #334155; font-weight: 500; }                               /* إلغاء، تغيير */
+  .bt.ic { padding: 0 .5mm; background: none; color: #64748b; }             /* أيقونة بلا إطار */
+  .bt.ic.del { color: #94a3b8; }
+  .bt.dr { background: #b91c1c; color: #fff; }                              /* تأكيد الحذف */
+  .bt.rm { background: #fff; color: #e11d48; border: .25mm solid #fecdd3; } /* إزالة الرمز */
+  .bt.em { background: #047857; color: #fff; }                              /* صرف في كشف المورد */
+  .bt.tb { background: var(--app-action); color: #fff; border: none; border-radius: 1.6mm; }
+  .bt.tb.off { background: #f1f5f9; color: #334155; }
+  .bt.nv { background: var(--app-dark); color: #fff; border-radius: 1.4mm; }
+  .bt.nv svg { color: #34d399; }
+  .upw { display: inline-block; padding: .7mm 1.2mm; border-radius: 1.8mm; background: #047857; vertical-align: -.6mm; }
+  .upw .bt { margin: 0; background: #fff; color: #047857; }
+
+  /* تبويبات رمادية (المصاريف، المالية، الفترة) */
+  .sg { display: inline-flex; gap: .4mm; padding: .5mm; border-radius: 1.2mm; background: #e2e8f0; vertical-align: -.3mm; line-height: 1; white-space: nowrap; }
+  .sg b { padding: 1.1mm 2.2mm; border-radius: 1.2mm; font-size: 8.4pt; font-weight: 500; color: #475569; }
+  .sg b.on { background: #fff; color: var(--app-ink); font-weight: 700; box-shadow: 0 .3mm .8mm rgba(15, 23, 42, .15); }
+
+  /* خانة مرحلة التنفيذ */
+  .stg { display: inline-flex; align-items: center; gap: 1.1mm; height: 5.2mm; padding: 0 1.5mm; border: .25mm solid; border-radius: 1mm; font-size: 8.2pt; font-weight: 700; line-height: 1; white-space: nowrap; vertical-align: .2mm; }
+  .stg::before { content: ""; width: 1.7mm; height: 1.7mm; border-radius: 50%; background: currentColor; }
+  .stg svg { width: 3mm; height: 3mm; opacity: .6; }
+  .stg.w { background: #f8fafc; color: #334155; border-color: #cbd5e1; } .stg.w::before { background: #94a3b8; }
+  .stg.b { background: #eff6ff; color: #1d4ed8; border-color: #bfdbfe; } .stg.b::before { background: #3b82f6; }
+  .stg.a { background: #fffbeb; color: #b45309; border-color: #fde68a; } .stg.a::before { background: #f59e0b; }
+  .stg.g { background: #ecfdf5; color: #047857; border-color: #a7f3d0; } .stg.g::before { background: #10b981; }
+  .cb { display: inline-block; width: 3.4mm; height: 3.4mm; border: .3mm solid #94a3b8; border-radius: .7mm; background: #fff; vertical-align: -.4mm; }
+  .red { color: #b91c1c; font-weight: 700; } .grn { color: #15803d; font-weight: 700; } .amb { color: #d97706; font-weight: 700; }
+
+  .task ol.steps > li { margin-bottom: .9mm; line-height: 1.7; }
+  .task { margin-bottom: 3mm; }
+  .col-gap > .task:last-child { margin-bottom: 0; }
+
+  /* رسم الشاشة الرئيسية */
+  .scr { display: grid; grid-template-columns: 180mm 1fr; gap: 0 7mm; align-items: start; }
+  .mk { position: relative; height: 150mm; border: .3mm solid #cbd5e1; border-radius: 2mm; background: #f4f7f6; overflow: hidden; font-size: 7.4pt; line-height: 1.4; box-shadow: 0 1mm 4mm rgba(15, 23, 42, .08); }
+  .mk-side { position: absolute; top: 0; right: 0; bottom: 0; width: 34mm; display: flex; flex-direction: column; background: #0e241c; }
+  .mk-brand { height: 9mm; display: flex; align-items: center; gap: 1.6mm; padding: 0 2.4mm; background: #081711; border-bottom: .3mm solid rgba(255, 255, 255, .1); color: #fff; font-family: var(--serif); font-weight: 700; font-size: 8pt; }
+  .mk-brand img { width: 6.5mm; height: 6.5mm; object-fit: contain; }
+  .mk-nav { flex: 1; display: grid; grid-template-rows: repeat(4, 1fr); gap: 1.8mm; padding: 1.8mm; }
+  .mk-tile { position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1.8mm; border-radius: 1.4mm; background: rgba(255, 255, 255, .04); color: #cbd5e1; font-weight: 700; font-size: 9pt; }
+  .mk-tile svg { width: 7.5mm; height: 7.5mm; color: #34d399; stroke-width: 1.75; }
+  .mk-tile.on { background: #ea580c; color: #fff; }
+  .mk-tile.on svg { color: #fff; }
+  .mk-badge { position: absolute; top: 1.6mm; left: 1.6mm; min-width: 4.6mm; padding: .3mm 1.1mm; border-radius: 1.2mm; background: rgba(0, 0, 0, .2); color: #fff; font-size: 7pt; text-align: center; }
+  .mk-top { position: absolute; top: 0; right: 34mm; left: 0; height: 9mm; display: flex; align-items: center; justify-content: space-between; padding: 0 4mm; background: #fff; border-bottom: .3mm solid #cbd5e1; }
+  .mk-top b { font-family: var(--serif); font-size: 8pt; color: #1e293b; }
+  .mk-top .d { color: #64748b; font-size: 7pt; }
+  .mk-chip { padding: .6mm 2mm; border: .25mm solid #e2e8f0; border-radius: 1.2mm; background: #f1f5f9; color: #334155; font-weight: 700; font-size: 7pt; }
+  .mk-main { position: absolute; top: 9mm; right: 34mm; left: 0; bottom: 0; padding: 3mm; }
+  .mk-bar { display: flex; align-items: center; justify-content: space-between; padding: 2mm; background: #fff; border: .3mm solid #cbd5e1; border-radius: 1mm; }
+  .mk-tabs, .mk-act { display: flex; align-items: center; gap: 1mm; }
+  .mk-t { height: 5.4mm; padding: 0 3mm; border-radius: 1.4mm; background: #f1f5f9; color: #334155; font-weight: 700; line-height: 5.4mm; }
+  .mk-t.on { background: #166534; color: #fff; }
+  .mk-search { width: 44mm; height: 5.4mm; display: flex; align-items: center; gap: 1.2mm; padding: 0 1.8mm; border: .25mm solid #cbd5e1; border-radius: .9mm; color: #94a3b8; }
+  .mk-search svg { width: 3mm; height: 3mm; }
+  .mk-new { height: 5.4mm; display: inline-flex; align-items: center; gap: 1mm; padding: 0 2.8mm; border-radius: 1.4mm; background: #166534; color: #fff; font-weight: 700; }
+  .mk-new svg { width: 3mm; height: 3mm; }
+  table.mk-tbl { width: 100%; margin-top: 2.5mm; border-collapse: collapse; background: #fff; border: .3mm solid #cbd5e1; }
+  .mk-tbl th { position: relative; padding: 1.8mm 2mm; background: #e9f0eb; border-bottom: .5mm solid #d2dfd6; border-left: .25mm solid #dde7e0; text-align: right; font-weight: 700; color: #0f172a; }
+  .mk-tbl td { padding: 1.8mm 2mm; border-top: .25mm solid #e2e8f0; border-left: .25mm solid #e2e8f0; vertical-align: middle; }
+  .mk-tbl .c { text-align: center; }
+  .mk-tbl .n { color: #94a3b8; }
+  .mk-tbl small { display: block; color: #94a3b8; font-size: 6.6pt; }
+  .mk-tbl .stg { height: 4.4mm; font-size: 6.8pt; padding: 0 1.2mm; }
+  .mk-tbl .stg svg { width: 2.6mm; height: 2.6mm; }
+  .mk-ed { display: inline-flex; width: 4.6mm; height: 4.6mm; align-items: center; justify-content: center; border: .25mm solid #cbd5e1; border-radius: 1.2mm; color: #64748b; vertical-align: middle; }
+  .mk-ed svg { width: 2.6mm; height: 2.6mm; }
+  .mk-q { display: inline-block; height: 4.6mm; padding: 0 2.2mm; margin-right: .8mm; border-radius: 1.2mm; background: #166534; color: #fff; font-weight: 700; line-height: 4.6mm; vertical-align: middle; }
+  .mk-q.s { background: #f1f5f9; color: #475569; font-weight: 500; }
+  .mk .pin { font-size: 8pt; }
+  .mk .pin.in { margin-left: 1mm; }
+  .legend .it { display: flex; gap: 2.5mm; align-items: flex-start; margin-bottom: 2.1mm; font-size: 9.8pt; line-height: 1.6; }
+  .legend .it .pin { position: static; flex: none; margin: .3mm 0 0; }
+
+  .sh { font-family: "Segoe UI", Arial, sans-serif; }
+
+  /* جداول المشكلات والمصطلحات */
+  table.t.pb td:first-child { width: 44%; font-weight: 700; background: #f6f8f4; }
+  table.t.gl td:first-child { width: 27%; font-weight: 700; color: var(--title); }
+  table.t.pb, table.t.gl { font-size: 9.2pt; }
+  table.t.btns td:first-child { width: 36mm; text-align: center; }
+
+  /* الغلاف والغلاف الخلفي */
+  .cover .sub2 { margin: 3mm 0 0; font-size: 10pt; color: var(--ink2); }
+  .back .contact { margin-top: 7mm; display: grid; grid-template-columns: auto auto; gap: 3.5mm 6mm; text-align: right; font-size: 11pt; }
+  .back .contact span:nth-child(odd) { font-weight: 700; color: var(--title); }
+  .back .ver { margin-top: 9mm; font-size: 9.5pt; color: var(--ink2); }
+</style>
+</head>
+<body data-logo="../../public/logo.png" data-brand="المنجرة" data-tagline="نظام إدارة ومحاسبة المنجرة">
+
+<!-- ═════════ الغلاف ═════════ -->
+<section class="page cover">
+  <svg class="art" viewBox="0 0 297 210" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <!-- حلقات جذع الشجرة -->
+    <g fill="none" stroke="#d9e3dc" stroke-width=".5">
+      <circle cx="0" cy="210" r="40"/><circle cx="0" cy="210" r="58"/><circle cx="0" cy="210" r="78"/>
+      <circle cx="0" cy="210" r="100"/><circle cx="0" cy="210" r="124"/><circle cx="0" cy="210" r="150"/>
+      <circle cx="0" cy="210" r="178"/>
+    </g>
+    <circle cx="82" cy="100" r="66" fill="#dcede3"/>
+    <path d="M22 60 A 72 72 0 0 1 142 44" fill="none" stroke="#0e8c8e" stroke-width="3" stroke-linecap="round"/>
+    <circle cx="146" cy="47" r="3.2" fill="#f2a516"/>
+    <!-- نافذة البرنامج مصغّرة -->
+    <g transform="translate(30 62)">
+      <rect x="0" y="0" width="108" height="72" rx="3" fill="#fff" stroke="#cbd5e1" stroke-width=".4"/>
+      <path d="M86 0h19a3 3 0 0 1 3 3v66a3 3 0 0 1-3 3H86z" fill="#0e241c"/>
+      <rect x="88" y="8" width="18" height="13" rx="1.2" fill="#ea580c"/>
+      <rect x="88" y="23" width="18" height="13" rx="1.2" fill="#ffffff" fill-opacity=".07"/>
+      <rect x="88" y="38" width="18" height="13" rx="1.2" fill="#ffffff" fill-opacity=".07"/>
+      <rect x="88" y="53" width="18" height="13" rx="1.2" fill="#ffffff" fill-opacity=".07"/>
+      <rect x="0" y="0" width="86" height="6" fill="#fff"/>
+      <line x1="0" y1="6" x2="86" y2="6" stroke="#e2e8f0" stroke-width=".4"/>
+      <rect x="66" y="10" width="15" height="4" rx="1" fill="#166534"/>
+      <rect x="6" y="10" width="14" height="4" rx="1" fill="#166534"/>
+      <rect x="5" y="18" width="78" height="5" fill="#e9f0eb"/>
+      <g fill="#e2e8f0">
+        <rect x="52" y="27" width="28" height="2.4" rx="1"/><rect x="52" y="35" width="24" height="2.4" rx="1"/>
+        <rect x="52" y="43" width="30" height="2.4" rx="1"/><rect x="52" y="51" width="22" height="2.4" rx="1"/>
+      </g>
+      <rect x="30" y="26.5" width="13" height="3.4" rx=".8" fill="#dbeafe"/>
+      <rect x="30" y="34.5" width="13" height="3.4" rx=".8" fill="#fef3c7"/>
+      <rect x="30" y="42.5" width="13" height="3.4" rx=".8" fill="#d1fae5"/>
+      <rect x="30" y="50.5" width="13" height="3.4" rx=".8" fill="#f1f5f9"/>
+      <rect x="15" y="27" width="10" height="2.4" rx="1" fill="#b91c1c" fill-opacity=".7"/>
+      <rect x="15" y="35" width="8" height="2.4" rx="1" fill="#b91c1c" fill-opacity=".7"/>
+      <rect x="15" y="43" width="9" height="2.4" rx="1" fill="#15803d" fill-opacity=".7"/>
+      <rect x="15" y="51" width="10" height="2.4" rx="1" fill="#b91c1c" fill-opacity=".7"/>
+    </g>
+  </svg>
+  <div class="cv-text">
+    <h1>دليل الاستخدام</h1>
+    <p class="sub">نظام إدارة ومحاسبة المنجرة</p>
+    <p class="sub2">الطلبيات · المصاريف والموردون · المالية · الإعدادات</p>
+    <div class="dots3"><i></i><i></i><i></i></div>
+    <span class="year">الإصدار 1.0.2 · 2026</span>
+  </div>
+  <div class="brand-line"></div>
+  <div class="brand">
+    <div><b>المنجرة</b><small>نظام إدارة ومحاسبة المنجرة</small></div>
+    <img src="../../public/logo.png" alt="">
+  </div>
+</section>
+
+<!-- ═════════ الفهرس وأشكال الأزرار ═════════ -->
+<section class="page" data-ch="أشكال الأزرار">
+  <div class="ph"><span>قبل أن تبدأ</span></div>
+  <div class="body">
+    <div class="two">
+      <div>
+        <h3>الفهرس</h3>
+        <div class="toc" id="toc" data-cols="1"></div>
+      </div>
+      <div>
+        <h3>أشكال الأزرار</h3>
+        <p class="muted" style="font-size:9.6pt">ترسم الخطوات كل زر بشكله ولونه في البرنامج. هذا ما يعنيه كل شكل:</p>
+        <table class="t tight btns">
+          <tr><th class="c">الشكل</th><th>ما يعنيه</th></tr>
+          <tr><td><span class="bt p" data-i="plus">طلبية جديدة</span></td><td>أخضر ممتلئ: ينشئ أو يحفظ أو يسجّل مالاً، مثل «حفظ» و«قبض» و«صرف».</td></tr>
+          <tr><td><span class="bt o">إلغاء</span></td><td>أبيض بإطار: يغلق النافذة دون حفظ، أو إجراء جانبي مثل «تغيير».</td></tr>
+          <tr><td><span class="bt s">سند</span></td><td>رمادي فاتح: يعرض فقط، مثل «سند» و«الحساب».</td></tr>
+          <tr><td><span class="bt i" data-i="pencil"></span></td><td>مربع فيه قلم: يفتح السطر للتعديل.</td></tr>
+          <tr><td><span class="bt ic" data-i="printer"></span> <span class="bt ic del" data-i="trash"></span></td><td>أيقونات دون إطار في آخر السطر: الطابعة تعرض السند، والسلة تحذف.</td></tr>
+          <tr><td><span class="bt dr">حذف</span></td><td>أحمر ممتلئ في نافذة تأكيد: ينفّذ الحذف. <span class="bt o">إلغاء</span> يتراجع.</td></tr>
+          <tr><td><span class="bt tb">قيد التنفيذ</span><span class="bt tb off">الكل</span></td><td>تبويبات: الأخضر هو المعروض الآن.</td></tr>
+          <tr><td><span class="sg"><b class="on">المصاريف</b><b>الموردون</b></span></td><td>تبويبات رمادية: الأبيض هو المعروض الآن.</td></tr>
+          <tr><td><span class="stg b" data-i-end="chevron">بداية</span></td><td>خانة المرحلة: لونها يدل على مرحلة الطلبية، وتفتح قائمة عند الضغط.</td></tr>
+          <tr><td><span class="bt nv" data-i="bag">الطلبيات</span></td><td>قسم في القائمة الجانبية.</td></tr>
+        </table>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═════════ الشاشة الرئيسية ═════════ -->
+<section class="page" data-ch="الشاشة الرئيسية">
+  <div class="ph"><span>الشاشة الرئيسية</span><small>ما تراه عند فتح البرنامج</small></div>
+  <div class="body">
+    <div class="scr">
+      <div class="mk">
+        <div class="mk-side">
+          <div class="mk-brand"><img src="../../public/logo.png" alt="">منجرة الإتقان</div>
+          <div class="mk-nav">
+            <div class="mk-tile on"><span class="mk-badge">3</span><span class="pin" style="top:1.3mm;left:7.4mm">2</span><span data-i="bag"></span>الطلبيات</div>
+            <div class="mk-tile"><span data-i="receipt"></span>المصاريف</div>
+            <div class="mk-tile"><span data-i="wallet"></span>المالية</div>
+            <div class="mk-tile"><span data-i="settings"></span>الإعدادات</div>
+          </div>
+          <span class="pin" style="bottom:3.5mm;left:3mm">1</span>
+        </div>
+        <div class="mk-top">
+          <div><span class="pin in">3</span><b>مرحبا بك، أبو أحمد</b> <span class="d">| الخميس، 24 سبتمبر 2026</span></div>
+          <div><span class="pin in">4</span><span class="mk-chip">منجرة الإتقان</span></div>
+        </div>
+        <div class="mk-main">
+          <div class="mk-bar">
+            <div class="mk-tabs"><span class="pin in">5</span><span class="mk-t">الكل</span><span class="mk-t on">قيد التنفيذ</span><span class="mk-t">مكتمل</span></div>
+            <div class="mk-act"><span class="pin in">6</span><span class="mk-search"><span data-i="search"></span>بحث...</span><span class="pin in" style="margin-right:1.5mm">7</span><span class="mk-new"><span data-i="plus"></span>طلبية جديدة</span></div>
+          </div>
+          <table class="mk-tbl">
+            <tr><th class="c" style="width:6mm">#</th><th style="width:30mm">الزبون</th><th>البيان</th><th class="c" style="width:22mm"><span class="pin in">8</span>الحالة</th><th class="c" style="width:22mm"><span class="pin in">9</span>المتبقي</th><th class="c" style="width:21mm"><span class="pin in">10</span></th></tr>
+            <tr><td class="c n">1</td><td><b>سامي خليل</b><small>0599123123</small></td><td>مطبخ خشب زان مع خزائن علوية</td><td class="c"><span class="stg b" data-i-end="chevron">بداية</span></td><td class="c red">٢٬٥٠٠ <span class="sh">₪</span></td><td class="c"><span class="mk-ed" data-i="pencil"></span><span class="mk-q">قبض</span></td></tr>
+            <tr><td class="c n">2</td><td><b>منى عوض</b><small>0567845210</small></td><td>غرفة نوم أطفال</td><td class="c"><span class="stg a" data-i-end="chevron">جارٍ</span></td><td class="c red">٩٠٠ <span class="sh">₪</span></td><td class="c"><span class="mk-ed" data-i="pencil"></span><span class="mk-q">قبض</span></td></tr>
+            <tr><td class="c n">3</td><td><b>خالد نصار</b><small>—</small></td><td>باب مدخل رئيسي</td><td class="c"><span class="stg w" data-i-end="chevron">انتظار</span></td><td class="c" style="color:#94a3b8">١٬٢٠٠ <span class="sh">₪</span></td><td class="c"><span class="mk-ed" data-i="pencil"></span><span class="mk-q">قبض</span></td></tr>
+            <tr><td class="c n">4</td><td><b>رامي حمدان</b><small>0592207781</small></td><td>صيانة أبواب خزانة</td><td class="c"><span class="stg b" data-i-end="chevron">بداية</span></td><td class="c amb">بدون سعر</td><td class="c"><span class="mk-ed" data-i="pencil"></span><span class="mk-q s">سند</span></td></tr>
+          </table>
+        </div>
+      </div>
+
+      <div class="legend">
+        <div class="it"><span class="pin">1</span><div>القائمة الجانبية: <span class="f">الطلبيات</span> و<span class="f">المصاريف</span> و<span class="f">المالية</span> و<span class="f">الإعدادات</span>. القسم المفتوح برتقالي.</div></div>
+        <div class="it"><span class="pin">2</span><div>عدد الطلبيات التي عليها مبلغ لم يُقبض بعد.</div></div>
+        <div class="it"><span class="pin">3</span><div>الترحيب وتاريخ اليوم. الاسم هو «المسؤول» في الإعدادات.</div></div>
+        <div class="it"><span class="pin">4</span><div>اسم المنجرة من الإعدادات. يُطبع أيضاً في رأس كل سند.</div></div>
+        <div class="it"><span class="pin">5</span><div>تبويبات الطلبيات. «قيد التنفيذ» يفتح أولاً. «مكتمل» للطلبيات الجاهزة المدفوعة كاملة.</div></div>
+        <div class="it"><span class="pin">6</span><div>البحث برقم الطلبية أو اسم الزبون أو الهاتف أو البيان.</div></div>
+        <div class="it"><span class="pin">7</span><div>زر تسجيل طلبية جديدة.</div></div>
+        <div class="it"><span class="pin">8</span><div>مرحلة التنفيذ. اضغطها لتغييرها.</div></div>
+        <div class="it"><span class="pin">9</span><div><span class="red">أحمر</span>: مبلغ مستحق. <span class="grn">خالص</span>: مدفوعة. <span class="amb">بدون سعر</span>: لم يُكتب مبلغها. رمادي: سعر مبدئي لطلبية في الانتظار.</div></div>
+        <div class="it"><span class="pin">10</span><div>القلم للتعديل، ثم «قبض» إن بقي مبلغ، أو «سند» إن دُفعت كاملة.</div></div>
+        <p class="tip">الرسالة الحمراء أسفل الشاشة تعني أن الحفظ لم يتم. تختفي وحدها بعد ثوانٍ.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═════════ الطلبيات ═════════ -->
+<section class="page" data-ch="الطلبيات">
+  <div class="ph"><span>الطلبيات</span><small>من القائمة الجانبية: الطلبيات</small></div>
+  <div class="body">
+    <div class="two">
+      <div class="col-gap">
+        <div class="task">
+          <h2>كيف أسجّل طلبية جديدة؟</h2>
+          <ol class="steps">
+            <li>اضغط <span class="bt p" data-i="plus">طلبية جديدة</span>.</li>
+            <li>اكتب اسم <span class="f">الزبون</span>، ثم <span class="f">الهاتف</span> إن وُجد.</li>
+            <li>اكتب في <span class="f">البيان</span> ما ستصنعه، مثل: خزانة حائط بابين.</li>
+            <li>اكتب <span class="f">المبلغ <span class="sh">₪</span></span>.</li>
+            <li>اختر <span class="f">مرحلة التنفيذ</span>. تبدأ على <span class="stg w" data-i-end="chevron">انتظار</span>.</li>
+            <li>إن دفع الزبون عربوناً فاكتبه في <span class="f">عربون</span>، واختر الوسيلة بجانبه.</li>
+            <li>اضغط <span class="bt p">حفظ</span>.</li>
+          </ol>
+          <div class="res">تظهر الطلبية أول الجدول في «قيد التنفيذ». إن سجّلت عربوناً يفتح «سند قبض» جاهزاً للطباعة.</div>
+          <div class="warn">في مرحلة «انتظار» لا يُسجَّل العربون ولو كتبته. اختر «بداية» قبل الحفظ، أو سجّله بعدها بزر «قبض». المبلغ اختياري في «انتظار» فقط.</div>
+        </div>
+
+        <div class="task">
+          <h2>كيف أغيّر مرحلة الطلبية؟</h2>
+          <ol class="steps">
+            <li>اضغط الخانة الملوّنة في عمود <span class="f">الحالة</span>.</li>
+            <li>اختر: <span class="stg w">انتظار</span> <span class="stg b">بداية</span> <span class="stg a">جارٍ</span> <span class="stg g">جاهز</span></li>
+          </ol>
+          <div class="res">يتغير اللون فوراً دون زر حفظ. الطلبية «جاهز» المدفوعة كاملة تنتقل إلى «مكتمل».</div>
+        </div>
+      </div>
+
+      <div class="col-gap">
+        <div class="task">
+          <h2>كيف أقبض دفعة من زبون؟</h2>
+          <ol class="steps">
+            <li>اضغط <span class="bt p">قبض</span> على سطر الطلبية.</li>
+            <li>تأكد من الزبون و<span class="f">المتبقي</span> أعلى النافذة.</li>
+            <li>غيّر <span class="f">المبلغ</span> إن لم يدفع المتبقي كله.</li>
+            <li>إن أعطيته خصماً فعلّم <span class="f">خصم</span> واكتب <span class="f">مبلغ الخصم</span>.</li>
+            <li>اختر <span class="f">الوسيلة</span>، وتأكد من <span class="f">التاريخ</span>.</li>
+            <li>للتحويل: اضغط <span class="bt sb" data-i="upload">رفع إشعار</span> واختر صورته.</li>
+            <li>اضغط <span class="bt p" data-i="save">حفظ</span>.</li>
+          </ol>
+          <div class="res">يفتح «سند قبض» رقمه يبدأ بـ«ق». اضغط <span class="bt p" data-i="printer">طباعة</span> لطباعته.</div>
+        </div>
+
+        <div class="task">
+          <h2>كيف أعدّل طلبية؟</h2>
+          <ol class="steps">
+            <li>اضغط <span class="bt i" data-i="pencil"></span> على سطرها.</li>
+            <li>غيّر ما تريد، ثم اضغط <span class="bt p">حفظ</span>.</li>
+          </ol>
+          <div class="warn">خانة <span class="f">المدفوع</span> للعرض فقط؛ المال يُسجَّل بزر «قبض». لا يُقبل مبلغ أقل مما دُفع.</div>
+        </div>
+
+        <div class="task">
+          <h2>كيف أطبع كشف حساب زبون؟</h2>
+          <ol class="steps">
+            <li>اضغط <span class="bt s">سند</span> على طلبية مدفوعة كاملة.</li>
+            <li>اختر <span class="bt tb off">الطلبية</span> لسنداتها، أو <span class="bt tb off">الزبون (3)</span> لكل طلبياته.</li>
+            <li>اضغط <span class="bt p" data-i="download">PDF</span>.</li>
+          </ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═════════ المصاريف والموردون ═════════ -->
+<section class="page" data-ch="المصاريف والموردون">
+  <div class="ph"><span>المصاريف والموردون</span><small>من القائمة الجانبية: المصاريف</small></div>
+  <div class="body">
+    <p class="lead" style="margin-bottom:3mm">في أعلى القسم: <span class="sg"><b class="on">المصاريف</b><b>الموردون</b><b>المطلوب</b></span>. المصروف مال دفعته، والمورد من تشتري منه بالدَّين.</p>
+    <div class="two">
+      <div class="col-gap">
+        <div class="task">
+          <h2>كيف أسجّل مصروفاً؟</h2>
+          <ol class="steps">
+            <li>في تبويب <span class="sg"><b class="on">المصاريف</b></span> اضغط <span class="bt p" data-i="plus">مصروف جديد</span>.</li>
+            <li>اكتب <span class="f">البيان</span> و<span class="f">المبلغ <span class="sh">₪</span></span>.</li>
+            <li>اختر <span class="f">التصنيف</span> و<span class="f">الوسيلة</span>، وغيّر <span class="f">التاريخ</span> إن لزم.</li>
+            <li>اضغط <span class="bt p">حفظ</span>.</li>
+          </ol>
+          <div class="res">يظهر المصروف برقم يبدأ بـ«م». للتعديل <span class="bt ic" data-i="pen"></span>، وللحذف <span class="bt ic del" data-i="trash"></span>.</div>
+        </div>
+
+        <div class="task">
+          <h2>كيف أضيف مورداً؟</h2>
+          <ol class="steps">
+            <li>في تبويب <span class="sg"><b class="on">الموردون</b></span> اضغط <span class="bt p" data-i="plus">مورد جديد</span>.</li>
+            <li>اكتب <span class="f">الاسم</span>، ثم <span class="f">الهاتف</span> و<span class="f">التصنيف</span> إن أردت.</li>
+            <li>إن كان له عليك دين قديم فاكتبه في <span class="f">رصيد سابق</span>.</li>
+            <li>اضغط <span class="bt p">حفظ</span>.</li>
+          </ol>
+          <div class="res">يظهر المورد في القائمة، ودينه في عمود <span class="f">المتبقي</span>.</div>
+        </div>
+
+        <div class="task">
+          <h2>كيف أدوّن ما تحتاجه الورشة؟</h2>
+          <ol class="steps">
+            <li>في تبويب <span class="sg"><b class="on">المطلوب</b></span> اكتب الشيء في <span class="f">البند</span> واختر نوعه.</li>
+            <li>اضغط <span class="bt p" data-i="plus">إضافة</span>. بعد الشراء علّم المربع <span class="cb"></span> بجانبه.</li>
+          </ol>
+          <div class="warn">السلة في هذا التبويب تحذف البند فوراً دون سؤال.</div>
+        </div>
+      </div>
+
+      <div class="col-gap">
+        <div class="task">
+          <h2>كيف أسجّل بضاعة اشتريتها بالدَّين؟</h2>
+          <ol class="steps">
+            <li>اضغط سطر المورد لفتح حسابه.</li>
+            <li>اضغط <span class="bt p" data-i="plus">شراء</span> أعلى النافذة.</li>
+            <li>اكتب <span class="f">المبلغ</span> و<span class="f">البيان</span>، ثم اضغط <span class="bt p">حفظ</span>.</li>
+          </ol>
+          <div class="res">يزيد ما عليك للمورد. لا يُحسب الشراء مصروفاً حتى تدفعه.</div>
+        </div>
+
+        <div class="task">
+          <h2>كيف أدفع لمورد؟</h2>
+          <ol class="steps">
+            <li>اضغط <span class="bt p">صرف</span> على سطر المورد، أو <span class="bt em">صرف</span> في حسابه.</li>
+            <li><span class="f">المبلغ</span> مكتوب بالدين كله؛ غيّره إن دفعت جزءاً.</li>
+            <li>اختر <span class="f">الوسيلة</span>، ومن <span class="f">البيان</span> اختر تصنيف المصروف.</li>
+            <li>اضغط <span class="bt p">حفظ</span>.</li>
+          </ol>
+          <div class="res">يفتح «سند صرف» رقمه يبدأ بـ«ص»، وينقص دين المورد، ويُضاف مصروف بالمبلغ نفسه في «المصاريف».</div>
+          <div class="warn">حذف هذا المصروف يحذف سند الصرف معه، ويعود المبلغ ديناً على المورد.</div>
+        </div>
+
+        <div class="task">
+          <h2>كيف أطبع كشف حساب مورد؟</h2>
+          <ol class="steps">
+            <li>اضغط سطر المورد، أو <span class="bt s">الحساب</span> إن لم يبق عليك شيء.</li>
+            <li>اضغط <span class="bt o" data-i="printer">طباعة</span>.</li>
+          </ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═════════ المالية والإعدادات ═════════ -->
+<section class="page" data-ch="المالية والإعدادات">
+  <div class="ph"><span>المالية والإعدادات</span><small>من القائمة الجانبية: المالية، الإعدادات</small></div>
+  <div class="body">
+    <div class="two">
+      <div class="col-gap">
+        <div class="task">
+          <h2>كيف أجد سنداً وأطبعه؟</h2>
+          <ol class="steps">
+            <li>افتح <span class="bt nv" data-i="wallet">المالية</span>. يظهر تبويب <span class="sg"><b class="on">السندات</b></span>.</li>
+            <li>اختر الفترة <span class="sg"><b class="on">شهر</b><b>سنة</b><b>الكل</b></span>، وتنقّل بالسهمين بجانبها.</li>
+            <li>اكتب في <span class="f">بحث...</span> اسم الطرف أو رقم السند.</li>
+            <li>اضغط سطر السند، ثم <span class="bt p" data-i="printer">طباعة</span>.</li>
+          </ol>
+          <div class="res">المبلغ الأخضر (+) قبض من زبون، والأحمر (−) صرف لمورد.</div>
+          <div class="tip">زر <span class="bt p" data-i="download">طباعة</span> أعلى الشاشة يطبع القائمة كلها للفترة المختارة.</div>
+        </div>
+
+        <div class="task">
+          <h2>كيف أعرف ربح الشهر؟</h2>
+          <ol class="steps">
+            <li>في <span class="bt nv" data-i="wallet">المالية</span> اضغط <span class="sg"><b class="on">الإحصاءات</b></span>، واكتب الرمز إن طُلب.</li>
+            <li>اختر الفترة.</li>
+          </ol>
+          <div class="res"><span class="f">صافي الربح</span> = <span class="f">المقبوضات</span> − <span class="f">المصاريف</span>. السهم الأخضر تحسّن عن الفترة السابقة. في «سنة» اضغط شهراً في الرسم لعرضه وحده.</div>
+        </div>
+      </div>
+
+      <div class="col-gap">
+        <div class="task">
+          <h2>كيف أغيّر اسم المنجرة وبياناتها؟</h2>
+          <ol class="steps">
+            <li>افتح <span class="bt nv" data-i="settings">الإعدادات</span>.</li>
+            <li>عدّل <span class="f">اسم المنجرة</span> و<span class="f">المسؤول</span> و<span class="f">الهاتف</span> و<span class="f">العنوان</span>.</li>
+            <li>اضغط <span class="bt p" data-i="save">حفظ</span>.</li>
+          </ol>
+          <div class="res">تظهر «تم الحفظ». هذه البيانات تُطبع على كل سند.</div>
+        </div>
+
+        <div class="task">
+          <h2>كيف أقفل الإحصاءات والإعدادات برمز؟</h2>
+          <ol class="steps">
+            <li>في <span class="f">رمز الحماية</span> اضغط <span class="bt p">تفعيل</span>.</li>
+            <li>اكتب 4 أرقام، ثم اضغط <span class="bt p">حفظ</span>.</li>
+          </ol>
+          <div class="res">يُطلب الرمز كلما فتحت «الإعدادات» أو «الإحصاءات». للتغيير <span class="bt o">تغيير</span>، وللإلغاء <span class="bt rm">إزالة</span>.</div>
+          <div class="warn">عند نسيان الرمز تحتاج كلمة الاستعادة (انظر «مشكلات وحلول»).</div>
+        </div>
+
+        <div class="task">
+          <h2>كيف أضيف وسيلة دفع أو أوقفها؟</h2>
+          <ol class="steps">
+            <li>في <span class="f">وسائل الدفع</span> اضغط <span class="bt p" data-i="plus">إضافة</span>.</li>
+            <li>اكتب <span class="f">الاسم</span>، واختر <span class="f">النوع</span>، ثم اضغط <span class="bt p">إضافة</span>.</li>
+          </ol>
+          <div class="res">لإيقاف وسيلة اضغط بطاقتها، فتصبح رمادية وتختفي من قوائم الاختيار. اضغطها ثانية لتفعيلها.</div>
+          <div class="warn"><span class="bt s" data-i="rotate-ccw">الافتراضي</span> يعيد الوسائل الأربع الأولى ويحذف ما أضفته.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═════════ مشكلات وحلول ═════════ -->
+<section class="page" data-ch="مشكلات وحلول">
+  <div class="ph"><span>مشكلات وحلول</span><small>النص بين « » هو الرسالة كما تظهر</small></div>
+  <div class="body">
+    <div class="two">
+      <table class="t tight pb">
+        <tr><th>المشكلة أو الرسالة</th><th>ما تفعله</th></tr>
+        <tr><td>كتبت عربوناً ولم يُسجَّل</td><td>حُفظت الطلبية في «انتظار». اضغط «قبض» على سطرها وسجّل المبلغ.</td></tr>
+        <tr><td>«أكمل الحقول المطلوبة»</td><td>املأ كل حقل عليه *. المبلغ مطلوب في كل مرحلة عدا «انتظار».</td></tr>
+        <tr><td>«العربون أكبر من مبلغ الطلبية»</td><td>اكتب عربوناً لا يزيد على المبلغ.</td></tr>
+        <tr><td>«لا يمكن أن يكون مبلغ الطلبية أقل مما تم سداده»</td><td>اكتب مبلغاً لا يقل عن المدفوع، أو احذف السند الزائد من «المالية».</td></tr>
+        <tr><td>«المبلغ مع الخصم أكبر من المتبقي»</td><td>أنقص المبلغ أو الخصم حتى لا يتجاوز مجموعهما المتبقي.</td></tr>
+        <tr><td>لا يظهر زر «سند» على الطلبية</td><td>يظهر بعد سدادها كاملة. قبل ذلك تجد سنداتها في «المالية».</td></tr>
+        <tr><td>اختفت طلبية من «قيد التنفيذ»</td><td>صارت «جاهز» ودُفعت كاملة، فانتقلت إلى «مكتمل».</td></tr>
+        <tr><td>أريد حذف طلبية</td><td>لا يوجد في هذا الإصدار حذف للطلبيات ولا إلغاء لها.</td></tr>
+        <tr><td>لا أرى القلم والسلة على سطر المورد</td><td>مرّر الفأرة فوق السطر فتظهر.</td></tr>
+      </table>
+      <table class="t tight pb">
+        <tr><th>المشكلة أو الرسالة</th><th>ما تفعله</th></tr>
+        <tr><td>«يوجد مورد بنفس الاسم»</td><td>المورد مسجّل من قبل. ابحث عنه في «الموردون».</td></tr>
+        <tr><td>«للمورد حركات مسجلة؛ لا يمكن حذفه»</td><td>لا يُحذف مورد عليه شراء أو صرف.</td></tr>
+        <tr><td>«المدفوع سيتجاوز المشتريات؛ احذف سند الصرف أولاً»</td><td>احذف سند الصرف من حساب المورد، ثم احذف الشراء.</td></tr>
+        <tr><td>حقل المبلغ مقفل في مصروف</td><td>المصروف ناتج عن «صرف» لمورد. احذفه (يُحذف السند معه) ثم اصرف من جديد.</td></tr>
+        <tr><td>وسيلة دفع لا تظهر في القائمة</td><td>الوسيلة موقوفة. اضغط بطاقتها في «وسائل الدفع» داخل «الإعدادات».</td></tr>
+        <tr><td>«رمز خاطئ» أو نسيت الرمز</td><td>اضغط «نسيت الرمز؟»، واكتب <span class="f">كلمة الاستعادة</span> و<span class="f">رمز جديد</span>، ثم «حفظ». الكلمة ليست في هذا الدليل؛ اطلبها من الدعم.</td></tr>
+        <tr><td>قسم «البيانات» عليه «غير متوفر حالياً»</td><td>النسخ الاحتياطي والاستيراد موقوفان في هذا الإصدار.</td></tr>
+        <tr><td>ظهر شريط «يتوفر تحديث جديد»</td><td>اضغط <span class="upw"><span class="bt" data-i="refresh">تحديث الآن</span></span>. إن كان باهتاً مع «جارٍ تجهيز حزمة التحديث» فانتظر دقائق. التحديث الإلزامي يوقف العمل حتى تثبّته.</td></tr>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- ═════════ المصطلحات ═════════ -->
+<section class="page" data-ch="المصطلحات">
+  <div class="ph"><span>المصطلحات</span><small>الحرف بين قوسين يبدأ به رقم المستند</small></div>
+  <div class="body">
+    <div class="two">
+      <table class="t tight gl">
+        <tr><th>المصطلح</th><th>معناه في البرنامج</th></tr>
+        <tr><td>طلبية (ط)</td><td>عمل لزبون، له بيان ومبلغ ومرحلة.</td></tr>
+        <tr><td>البيان</td><td>وصف قصير للطلبية أو المصروف أو السند.</td></tr>
+        <tr><td>عربون</td><td>أول دفعة تُسجَّل مع الطلبية الجديدة.</td></tr>
+        <tr><td>المتبقي</td><td>ما لم يُدفع بعد.</td></tr>
+        <tr><td>خالص</td><td>لم يبق شيء للدفع.</td></tr>
+        <tr><td>خصم</td><td>مبلغ تتنازل عنه للزبون. ينقص المتبقي ولا يُحسب مقبوضاً.</td></tr>
+        <tr><td>بدون سعر</td><td>طلبية خرجت من الانتظار ولم يُكتب مبلغها.</td></tr>
+        <tr><td><span class="stg w">انتظار</span></td><td>لم يبدأ العمل. إن لم يُدفع عليها شيء فلا تُحسب ديناً ولا مبيعاً.</td></tr>
+        <tr><td><span class="stg b">بداية</span> <span class="stg a">جارٍ</span></td><td>بدأ التصنيع، ثم مرحلة الدهان.</td></tr>
+        <tr><td><span class="stg g">جاهز</span></td><td>جاهزة للتسليم. مع السداد الكامل تصبح «مكتمل».</td></tr>
+        <tr><td>قبض</td><td>مال استلمته من زبون. ينتج «سند قبض» (ق).</td></tr>
+        <tr><td>إشعار</td><td>صورة التحويل البنكي أو المحفظة، تُرفق بالقبض.</td></tr>
+      </table>
+      <table class="t tight gl">
+        <tr><th>المصطلح</th><th>معناه في البرنامج</th></tr>
+        <tr><td>مصروف (م)</td><td>مال خرج من المنجرة: مواد، أجور، إيجار، نقل.</td></tr>
+        <tr><td>شراء (ف)</td><td>بضاعة أخذتها من مورد بالدَّين. تزيد ما عليك له.</td></tr>
+        <tr><td>رصيد سابق</td><td>دين قديم عليك للمورد قبل استخدام البرنامج.</td></tr>
+        <tr><td>صرف</td><td>مال دفعته لمورد. ينتج «سند صرف» (ص) ومصروفاً.</td></tr>
+        <tr><td>المطلوب</td><td>قائمة مشتريات الورشة. لا تدخل في الحسابات.</td></tr>
+        <tr><td>الوسيلة</td><td>طريقة الدفع: نقداً، بنك فلسطين، محفظة بال بي، محفظة جوال بي.</td></tr>
+        <tr><td>المقبوضات</td><td>مجموع سندات القبض في الفترة المختارة.</td></tr>
+        <tr><td>صافي الربح</td><td>المقبوضات ناقص المصاريف في الفترة.</td></tr>
+        <tr><td>ديون الزبائن</td><td>مجموع المتبقي على الطلبيات الآن.</td></tr>
+        <tr><td>رمز الحماية</td><td>4 أرقام تقفل «الإحصاءات» و«الإعدادات».</td></tr>
+        <tr><td>كلمة الاستعادة</td><td>تسمح بوضع رمز جديد عند نسيان الرمز.</td></tr>
+        <tr><td>رموز المستندات</td><td>قائمة الحروف كاملة في «الإعدادات».</td></tr>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- ═════════ الغلاف الخلفي ═════════ -->
+<section class="page back" data-nofooter>
+  <div class="center">
+    <img src="../../public/logo.png" alt="">
+    <h2>الدعم الفني</h2>
+    <p class="muted">لأي مشكلة لم يحلّها هذا الدليل، أو لطلب كلمة الاستعادة</p>
+    <div class="contact">
+      <span>الجهة</span><span class="fill">&nbsp;</span>
+      <span>المسؤول</span><span class="fill">&nbsp;</span>
+      <span>الهاتف</span><span class="fill">&nbsp;</span>
+      <span>واتساب</span><span class="fill">&nbsp;</span>
+      <span>البريد الإلكتروني</span><span class="fill">&nbsp;</span>
+      <span>أوقات الرد</span><span class="fill">&nbsp;</span>
+    </div>
+    <p class="ver">هذا الدليل يطابق الإصدار 1.0.2 من نظام إدارة ومحاسبة المنجرة</p>
+  </div>
+</section>
+
+<script src="guide.js"></script>
+</body>
+</html>

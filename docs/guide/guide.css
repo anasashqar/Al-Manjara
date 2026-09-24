@@ -1,0 +1,354 @@
+/* تصميم أدلة نون المشترك: صفحات A4 أفقية بأسلوب الأدلة التنظيمية، وأزرار بشكلها في النظام */
+@font-face { font-family: "Thmanyah Sans"; src: url("../../src/renderer/assets/fonts/thmanyah/thmanyahsans-Regular.woff2") format("woff2"); font-weight: 400; }
+@font-face { font-family: "Thmanyah Sans"; src: url("../../src/renderer/assets/fonts/thmanyah/thmanyahsans-Medium.woff2") format("woff2"); font-weight: 500; }
+@font-face { font-family: "Thmanyah Sans"; src: url("../../src/renderer/assets/fonts/thmanyah/thmanyahsans-Bold.woff2") format("woff2"); font-weight: 700; }
+@font-face { font-family: "Thmanyah Serif"; src: url("../../src/renderer/assets/fonts/thmanyah/thmanyahserifdisplay-Bold.woff2") format("woff2"); font-weight: 700; }
+@font-face { font-family: "Thmanyah Serif"; src: url("../../src/renderer/assets/fonts/thmanyah/thmanyahserifdisplay-Black.woff2") format("woff2"); font-weight: 900; }
+
+:root {
+  --paper: #fbfcf8;
+  --title: #0b5a45;
+  --gold: #8a6d1f;
+  --ink: #1f2d29;
+  --ink2: #52615b;
+  --teal: #0e8c8e;
+  --teal-d: #0b6668;
+  --sage: #d5e4dc;
+  --mint: #dcede3;
+  --row: #f4f7f2;
+  --line: #d9e3dc;
+  --amber: #f2a516;
+  --amber-soft: #fff5e1;
+  --sans: "Thmanyah Sans", "Segoe UI", Tahoma, sans-serif;
+  --serif: "Thmanyah Serif", "Thmanyah Sans", serif;
+
+  /* ألوان النظام الافتراضية، لرسم الأزرار كما تظهر فيه */
+  --app-action: #059669;
+  --app-dark: #052e2b;
+  --app-active: #10b981;
+  --app-ink: #0f172a;
+  --app-muted: #64748b;
+  --app-border: #94a3b8;
+  --app-soft: #f1f5f9;
+}
+
+@page { size: A4 landscape; margin: 0; }
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body {
+  background: #e4e8e5;
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: 11pt;
+  line-height: 1.75;
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}
+
+/* ── الصفحة ── */
+.page {
+  position: relative;
+  width: 297mm;
+  height: 210mm;
+  margin: 10mm auto;
+  background: var(--paper);
+  overflow: hidden;
+  box-shadow: 0 2px 14px rgba(20, 40, 30, .12);
+  page-break-after: always;
+  break-after: page;
+}
+@media print {
+  body { background: none; }
+  .page { margin: 0; box-shadow: none; }
+}
+.body { position: absolute; top: 29mm; right: 16mm; bottom: 21mm; left: 16mm; }
+
+/* رأس الصفحة: شريحة فاتحة بسهم، وخلفها لسان أخضر */
+.ph { position: absolute; top: 10mm; right: 14mm; height: 11mm; }
+.ph::before {
+  content: "";
+  position: absolute;
+  top: -4.5mm;
+  right: -2mm;
+  width: 36mm;
+  height: 11mm;
+  border-radius: 5.5mm;
+  background: var(--teal);
+}
+.ph span {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 5mm;
+  height: 11mm;
+  padding: 0 7mm 0 1.6mm;
+  border-radius: 5.5mm;
+  background: var(--sage);
+  font-weight: 700;
+  font-size: 12.5pt;
+  color: var(--gold);
+}
+.ph span::after {
+  content: "";
+  width: 8mm;
+  height: 8mm;
+  border-radius: 50%;
+  background: var(--teal) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 10'%3E%3Cpath d='M6.5 2.2 3 5l3.5 2.8z' fill='%23fff'/%3E%3C/svg%3E") center / 60% no-repeat;
+}
+.ph small { position: absolute; top: 2.4mm; right: calc(100% + 4mm); white-space: nowrap; font-size: 10pt; color: var(--ink2); }
+
+/* تذييل: رقم الصفحة يساراً، والشعار يميناً، وخط بينهما */
+.pf-num {
+  position: absolute;
+  left: 14mm;
+  bottom: 7mm;
+  width: 24mm;
+  height: 8mm;
+  border-radius: 4mm;
+  background: var(--sage);
+  font-size: 10pt;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding-left: 6mm;
+}
+.pf-num::before { content: ""; position: absolute; left: 0; top: 0; width: 9mm; height: 8mm; border-radius: 4mm; background: var(--teal); }
+.pf-line { position: absolute; left: 44mm; right: 60mm; bottom: 11mm; border-top: .3mm solid var(--line); }
+.pf-logo { position: absolute; right: 14mm; bottom: 6mm; display: flex; align-items: center; gap: 2.5mm; }
+.pf-logo img { width: 9mm; height: 9mm; }
+.pf-logo b { display: block; font-family: var(--serif); font-size: 11pt; color: var(--title); line-height: 1.1; }
+.pf-logo small { display: block; font-size: 6.5pt; color: var(--ink2); line-height: 1.2; }
+
+/* ── النص ── */
+p { margin: 0 0 2.5mm; }
+.lead { margin: 0 0 4mm; padding: 2.5mm 5mm; background: #f1f3ec; }
+h3 { margin: 0 0 2mm; font-size: 12pt; color: var(--title); }
+.f { font-weight: 700; color: var(--app-ink); }          /* اسم حقل أو خيار كما في الشاشة */
+.muted { color: var(--ink2); }
+
+/* ── المهمة: سؤال، ثم خطوات مرقمة، ثم ما يظهر بعدها ── */
+.two { display: grid; grid-template-columns: 1fr 1fr; gap: 0 10mm; align-items: start; }
+.task { margin-bottom: 5mm; }
+.task h2 {
+  display: flex;
+  align-items: center;
+  gap: 2.5mm;
+  margin: 0 0 2mm;
+  padding-bottom: 1.2mm;
+  border-bottom: .4mm solid var(--mint);
+  font-size: 12.5pt;
+  line-height: 1.4;
+  color: var(--title);
+}
+.task h2::before { content: ""; flex: none; width: 2.2mm; height: 5mm; border-radius: 1mm; background: var(--teal); }
+.pre { margin: 0 0 2mm; font-size: 9.8pt; color: var(--ink2); }
+.pre b { color: var(--ink); }
+ol.steps { margin: 0; padding: 0; list-style: none; counter-reset: s; }
+ol.steps > li {
+  position: relative;
+  counter-increment: s;
+  margin-bottom: 1.4mm;
+  padding-right: 8mm;
+  font-size: 10.5pt;
+  line-height: 1.8;
+}
+ol.steps > li::before {
+  content: counter(s);
+  position: absolute;
+  right: 0;
+  top: .6mm;
+  width: 5.4mm;
+  height: 5.4mm;
+  border-radius: 50%;
+  background: var(--teal);
+  color: #fff;
+  font-size: 8.5pt;
+  font-weight: 700;
+  line-height: 5.4mm;
+  text-align: center;
+}
+ol.steps ul { margin: .5mm 0 0; padding-right: 5mm; font-size: 9.8pt; }
+.res {
+  margin-top: 2mm;
+  padding: 1.6mm 3.5mm;
+  border-radius: 1.5mm;
+  background: #e6f4ec;
+  font-size: 10pt;
+}
+.res::before { content: "النتيجة: "; font-weight: 700; color: #0b6a3e; }
+.warn, .tip {
+  margin: 2mm 0;
+  padding: 1.8mm 4mm;
+  border-right: 1.3mm solid var(--amber);
+  border-radius: 1.5mm;
+  background: var(--amber-soft);
+  font-size: 9.8pt;
+}
+.warn::before { content: "تنبيه: "; font-weight: 700; color: #8a5a00; }
+.tip { border-right-color: var(--teal); background: #eaf5f5; }
+.tip::before { content: "فائدة: "; font-weight: 700; color: var(--teal-d); }
+
+/* ── الأزرار كما تظهر في النظام ── */
+.bt {
+  display: inline-flex;
+  align-items: center;
+  gap: 1mm;
+  height: 5.6mm;
+  margin: 0 .4mm;
+  padding: 0 2.3mm;
+  border-radius: 1.6mm;
+  font-size: 8.6pt;
+  font-weight: 700;
+  line-height: 1;
+  white-space: nowrap;
+  vertical-align: .3mm;
+}
+.bt svg { width: 3.3mm; height: 3.3mm; flex: none; }
+.bt.p { background: var(--app-action); color: #fff; box-shadow: 0 .5mm 1.5mm -.8mm rgba(15, 23, 42, .45); }
+.bt.d { background: var(--app-dark); color: #fff; box-shadow: 0 .5mm 1.5mm -.8mm rgba(15, 23, 42, .45); }
+.bt.g { background: #16a34a; color: #fff; }
+.bt.s { background: var(--app-soft); color: var(--app-ink); border: .25mm solid var(--app-border); }
+.bt.o { background: #fff; color: var(--app-dark); border: .25mm solid #cbd5e1; }
+.bt.l { padding: 0 .6mm; background: none; color: var(--app-action); text-decoration: underline; text-underline-offset: .8mm; }
+.bt.lg { background: #f0fdf4; color: #166534; border: .25mm solid #bbf7d0; border-radius: 2.4mm; }
+.bt.rd { background: #fff; color: #991b1b; border: .25mm solid #fecaca; }
+.bt.x { padding: 0 .6mm; background: none; color: #dc2626; }
+.bt.i { width: 5.6mm; padding: 0; justify-content: center; background: #fff; color: var(--app-muted); border: .25mm solid #cbd5e1; }
+.bt.i.wa { color: #16a34a; }
+/* قسم في القائمة الجانبية */
+.nv { background: var(--app-dark); color: #fff; border-radius: 1.2mm; }
+.nv svg { color: #a7f3d0; }
+/* تبويب داخل الشاشة */
+.tb { background: #fff; color: var(--app-ink); border: .25mm solid #e2e8f0; border-bottom: .7mm solid var(--app-active); border-radius: 1.2mm 1.2mm 0 0; }
+/* عنصر في قائمة منسدلة */
+.mi { background: #fff; color: var(--app-ink); border: .25mm solid #e2e8f0; border-radius: 1mm; box-shadow: 0 .6mm 1.6mm -.6mm rgba(15, 23, 42, .25); font-weight: 500; }
+.mi svg { color: var(--app-muted); }
+
+/* ── الجداول ── */
+table.t { width: 100%; border-collapse: collapse; font-size: 10pt; line-height: 1.55; }
+.t th { background: var(--mint); color: var(--title); font-weight: 700; padding: 1.8mm 3mm; border: .3mm solid #fff; text-align: right; }
+.t td { padding: 1.6mm 3mm; border: .3mm solid var(--line); background: #fff; vertical-align: middle; }
+.t tr:nth-child(even) td { background: var(--row); }
+.t td.k { width: 42mm; font-weight: 700; background: #eef2ec; }
+.t td.c, .t th.c { text-align: center; }
+.t .yes { color: #0b8a5a; font-weight: 700; }
+.t .no { color: #aab6b0; }
+.t .ask { color: #b26b00; font-weight: 700; }
+table.t.tight td { padding: 1.1mm 3mm; }
+.fn { margin-top: 2mm; font-size: 8.8pt; color: var(--ink2); }
+
+.chip { display: inline-block; padding: 0 3mm; border-radius: 3mm; background: var(--sage); font-weight: 700; font-size: 9pt; color: var(--title); line-height: 1.7; }
+.chip.g { background: #d7f0e0; color: #0b6a3e; }
+.chip.r { background: #fbe1df; color: #a3322a; }
+.chip.a { background: #fff0cc; color: #8a5a00; }
+.chip.b { background: #dbeafe; color: #1e40af; }
+.chip.n { background: #e5e7eb; color: #374151; }
+
+/* ترتيب الإعداد: أسهم متتالية */
+.flow { display: grid; grid-template-columns: repeat(5, 1fr); gap: 3mm 2mm; margin-bottom: 5mm; }
+.flow div {
+  padding: 2.3mm 6mm 2.3mm 3mm;
+  background: var(--mint);
+  clip-path: polygon(0 0, 92% 0, 100% 50%, 92% 100%, 0 100%, 6% 50%);
+  transform: scaleX(-1);
+}
+.flow div span { display: block; transform: scaleX(-1); text-align: center; font-weight: 700; font-size: 9.8pt; color: var(--title); }
+.flow div:nth-child(odd) { background: var(--sage); }
+
+.banner {
+  width: 200mm;
+  margin: 0 auto 4mm;
+  padding: 2.3mm 0;
+  background: #eef1e8;
+  clip-path: polygon(7% 0, 100% 0, 100% 100%, 7% 100%, 0 50%);
+  text-align: center;
+  font-weight: 700;
+  font-size: 13pt;
+  color: var(--title);
+}
+
+/* ── رسم مبسط لشاشة النظام ── */
+.mock { position: relative; height: 112mm; border: .3mm solid #cbd5e1; border-radius: 2mm; background: #f8fafc; overflow: hidden; font-size: 8.5pt; }
+.mock .side { position: absolute; top: 0; right: 0; bottom: 0; width: 46mm; padding: 3mm 2.5mm; background: var(--app-dark); color: #fff; }
+.mock .side .logo { display: flex; align-items: center; gap: 1.5mm; margin-bottom: 4mm; font-weight: 700; font-size: 9pt; }
+.mock .side .logo img { width: 6mm; height: 6mm; border-radius: 1mm; background: #fff; }
+.mock .side .it { display: flex; align-items: center; gap: 1.8mm; height: 6.4mm; padding: 0 2mm; border-radius: 1.2mm; color: #d1fae5; }
+.mock .side .it svg { width: 3.4mm; height: 3.4mm; }
+.mock .side .it.on { background: linear-gradient(90deg, #0d9488, var(--app-active)); color: #fff; font-weight: 700; }
+.mock .side .bottom { position: absolute; bottom: 3mm; right: 2.5mm; left: 2.5mm; border-top: .3mm solid rgba(255, 255, 255, .15); padding-top: 2mm; }
+.mock .top { position: absolute; top: 0; right: 46mm; left: 0; height: 12mm; display: flex; align-items: center; gap: 2mm; padding: 0 3mm; background: #fff; border-bottom: .3mm solid #e2e8f0; }
+.mock .top .greet { margin-left: auto; color: var(--app-muted); }
+.mock .main { position: absolute; top: 12mm; right: 46mm; left: 0; bottom: 0; padding: 3mm; }
+.mock .bar { height: 3mm; margin-bottom: 2.4mm; border-radius: 1mm; background: #e2e8f0; }
+.mock .bar.w6 { width: 60%; } .mock .bar.w8 { width: 80%; } .mock .bar.w4 { width: 40%; }
+.mock .banner-s { position: absolute; top: 12mm; right: 46mm; left: 0; height: 5mm; background: #fef3c7; color: #92400e; font-size: 7.5pt; text-align: center; line-height: 5mm; }
+.pin {
+  position: absolute;
+  width: 5.4mm;
+  height: 5.4mm;
+  border-radius: 50%;
+  background: var(--amber);
+  color: #3b2a00;
+  font-size: 8.5pt;
+  font-weight: 700;
+  line-height: 5.4mm;
+  text-align: center;
+  box-shadow: 0 0 0 .8mm rgba(242, 165, 22, .25);
+}
+.pinned { position: relative; }
+.pinned > .pin { top: -2.4mm; left: -2.8mm; z-index: 2; }
+.pin.in { position: static; display: inline-block; margin-left: 1.5mm; vertical-align: .3mm; }
+
+/* ── الغلاف ── */
+.cover .art { position: absolute; inset: 0; width: 297mm; height: 210mm; }
+.cover .cv-text { position: absolute; right: 10mm; top: 52mm; width: 130mm; text-align: center; }
+.cover h1 { margin: 0; font-family: var(--serif); font-weight: 900; font-size: 34pt; line-height: 1.3; color: var(--title); }
+.cover .sub { margin: 6mm 0 0; font-size: 13pt; color: var(--title); }
+.cover .dots3 { display: flex; justify-content: center; gap: 7mm; margin: 12mm 0 0; }
+.cover .dots3 i { width: 4mm; height: 4mm; border-radius: 50%; background: var(--title); }
+.cover .dots3 i:nth-child(2) { background: var(--amber); }
+.cover .year {
+  display: inline-flex;
+  align-items: center;
+  gap: 5mm;
+  margin-top: 12mm;
+  height: 10mm;
+  padding: 0 8mm 0 1.2mm;
+  border-radius: 5mm;
+  background: var(--teal);
+  color: #fff;
+  font-weight: 700;
+  font-size: 11pt;
+}
+.cover .year::after {
+  content: "";
+  order: -1;
+  width: 7.6mm;
+  height: 7.6mm;
+  border-radius: 50%;
+  background: #0a5f61 url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 10'%3E%3Cpath d='M6.5 2.2 3 5l3.5 2.8z' fill='%23fff'/%3E%3C/svg%3E") center / 60% no-repeat;
+}
+.cover .brand { position: absolute; right: 14mm; bottom: 9mm; display: flex; align-items: center; gap: 3mm; }
+.cover .brand img { width: 16mm; height: 16mm; }
+.cover .brand b { display: block; font-family: var(--serif); font-size: 16pt; color: var(--title); line-height: 1.1; }
+.cover .brand small { display: block; font-size: 8pt; color: var(--ink2); }
+.cover .brand-line { position: absolute; right: 45mm; left: 150mm; bottom: 13mm; border-top: .3mm solid var(--line); }
+
+.back .center { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
+.back img { width: 34mm; height: 34mm; }
+.back h2 { margin: 5mm 0 1mm; font-family: var(--serif); font-size: 26pt; color: var(--title); }
+.back .fill { display: inline-block; min-width: 55mm; border-bottom: .3mm dashed var(--ink2); color: var(--ink2); }
+
+/* ── الفهرس ── */
+.toc { display: grid; grid-template-columns: 1fr 1fr; gap: 7mm; align-items: start; }
+.toc table { width: 100%; border-collapse: collapse; font-size: 8.8pt; line-height: 1.35; }
+.toc td { padding: .7mm 2mm; border-bottom: .3mm dotted #c7d3cc; }
+.toc td:last-child { width: 9mm; text-align: center; font-weight: 700; color: var(--teal-d); }
+.toc tr.ch td { padding-top: 2mm; border-bottom: .4mm solid var(--teal); font-weight: 700; color: var(--title); font-size: 9.6pt; }
+
+/* ── رأس البطاقات القصيرة (المعلم، الأسرة) ── */
+.card-head { position: absolute; top: 8mm; right: 14mm; left: 14mm; height: 16mm; display: flex; align-items: center; gap: 4mm; border-bottom: .4mm solid var(--mint); }
+.card-head img { width: 12mm; height: 12mm; }
+.card-head h1 { margin: 0; font-family: var(--serif); font-size: 19pt; color: var(--title); line-height: 1.2; }
+.card-head span { margin-right: auto; font-size: 10pt; color: var(--ink2); }
