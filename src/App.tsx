@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import {
   db,
@@ -108,7 +108,7 @@ export function App() {
     } else {
       await createExpense({
         title: expenseData.title || '',
-        category: expenseData.category || 'raw_materials',
+        category: expenseData.category || 'general',
         amount: expenseData.amount || 0,
         date: expenseData.date || todayISO(),
         paymentMethod: expenseData.paymentMethod || 'نقداً',
@@ -118,6 +118,16 @@ export function App() {
     }
     setEditingExpense(null);
   };
+
+  // بيانات المصاريف السابقة، الأكثر تكراراً أولاً (سندات الموردين لها بيان تلقائي فتُستثنى)
+  const expenseTitles = useMemo(() => {
+    const counts = new Map<string, number>();
+    for (const e of expenses) {
+      const t = e.title.trim();
+      if (t && !e.linkedPaymentId) counts.set(t, (counts.get(t) || 0) + 1);
+    }
+    return [...counts].sort((a, b) => b[1] - a[1]).map(([t]) => t);
+  }, [expenses]);
 
   // الطلبيات الملغاة ليست ديوناً
   const ordersWithDebt = orders.filter(isReceivable);
@@ -223,6 +233,7 @@ export function App() {
         onSave={handleSaveExpense}
         initialExpense={editingExpense}
         paymentMethods={paymentMethods}
+        titleSuggestions={expenseTitles}
       />
 
       {/* Quick Pay Modal with Customer Picker */}

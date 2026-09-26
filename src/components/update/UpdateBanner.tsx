@@ -71,7 +71,7 @@ export function UpdateBanner() {
         </p>
         {release.notes && <p className="text-sm opacity-90 whitespace-pre-line mt-1">{release.notes}</p>}
         {!release.deployed && (
-          <p className="text-xs opacity-80 mt-1">جارٍ تجهيز حزمة التحديث، قد يستغرق ذلك بضع دقائق.</p>
+          <p className="text-xs opacity-80 mt-1">جارٍ التجهيز...</p>
         )}
         {updating && progress !== null && (
           <div className="mt-2 h-1.5 rounded-full bg-white/25 overflow-hidden">
@@ -95,7 +95,7 @@ export function UpdateBanner() {
     return (
       <div className="fixed inset-0 z-[100] bg-slate-900/70 flex items-center justify-center p-4" dir="rtl">
         <div className="bg-emerald-700 text-white rounded-2xl shadow-xl p-5 max-w-md w-full flex flex-col gap-4">
-          <p className="text-sm opacity-90">هذا التحديث إلزامي لمتابعة استخدام النظام.</p>
+          <p className="text-sm opacity-90">تحديث إلزامي</p>
           <div className="flex items-start gap-3">{body}</div>
         </div>
       </div>

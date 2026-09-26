@@ -8,7 +8,7 @@ import { num } from '../../utils/format';
 import type { WorkshopSettings } from '../../types';
 
 export interface VoucherData {
-  kind: 'receipt' | 'payment'; // سند قبض / سند صرف
+  kind: 'receipt';
   number: string;
   date: string;
   party: string;
@@ -20,8 +20,7 @@ export interface VoucherData {
   notes?: string;
 }
 
-const TITLE = { receipt: 'سند قبض', payment: 'سند صرف' } as const;
-const PARTY_LABEL = { receipt: 'وصلنا من', payment: 'صرفنا إلى' } as const;
+const TITLE = 'سند قبض';
 
 // رموز وسائل دفع قديمة قد توجد في بيانات سابقة
 const METHOD_NAMES: Record<string, string> = {
@@ -34,7 +33,7 @@ const METHOD_NAMES: Record<string, string> = {
 const LABEL = 'w-20 align-top px-3 py-1.5 text-slate-500 whitespace-nowrap border-l border-slate-200';
 const VALUE = 'px-3 py-1.5 leading-snug';
 
-// تصميم موحد ومضغوط لسند القبض وسند الصرف: خطوط وإطارات واضحة، وعمود عناوين ثابت
+// سند القبض: تصميم مضغوط بخطوط وإطارات واضحة، وعمود عناوين ثابت
 // حتى لا تكسر النصوص الطويلة الترتيب، وحجم يظهر كاملاً دون تمرير
 export const VoucherDocument: React.FC<{ data: VoucherData; settings: WorkshopSettings; id: string }> = ({
   data,
@@ -44,7 +43,7 @@ export const VoucherDocument: React.FC<{ data: VoucherData; settings: WorkshopSe
   const contact = [settings.phone, settings.address].filter(Boolean).join(' · ');
   const balance =
     data.remainingAfter === undefined ? null : data.remainingAfter > 0 ? (
-      <span className="font-bold text-[#b91c1c]">متبقي {num(data.remainingAfter)}</span>
+      <span className="font-bold text-[#b91c1c]">{num(data.remainingAfter)}</span>
     ) : (
       <span className="font-bold text-[#15803d]">خالص</span>
     );
@@ -58,7 +57,7 @@ export const VoucherDocument: React.FC<{ data: VoucherData; settings: WorkshopSe
           {contact && <p className="text-[10px] text-slate-500 truncate">{contact}</p>}
         </div>
         <div className="shrink-0 whitespace-nowrap border-2 border-slate-800 rounded-[4px] px-2.5 py-0.5 font-bold">
-          {TITLE[data.kind]}
+          {TITLE}
         </div>
       </div>
 
@@ -72,13 +71,13 @@ export const VoucherDocument: React.FC<{ data: VoucherData; settings: WorkshopSe
             <td className={`${VALUE} font-bold whitespace-nowrap`}>{formatDateAr(data.date)}</td>
           </tr>
           <tr>
-            <td className={LABEL}>{PARTY_LABEL[data.kind]}</td>
+            <td className={LABEL}>من</td>
             <td className={`${VALUE} font-bold`} colSpan={3}>{data.party}</td>
           </tr>
           <tr className="bg-[#e9f0eb]">
             <td className={LABEL}>المبلغ</td>
             <td className={VALUE} colSpan={3}>
-              <span className="text-sm font-bold">{num(data.amount)}</span> شيكل
+              <span className="text-sm font-bold">{num(data.amount)}</span> ₪
               {data.discount ? <span className="text-slate-500"> · خصم {num(data.discount)}</span> : null}
               <div className="text-[11px] text-slate-600">{tafqeetShekels(data.amount)}</div>
             </td>
@@ -94,7 +93,7 @@ export const VoucherDocument: React.FC<{ data: VoucherData; settings: WorkshopSe
             </td>
             {balance && (
               <>
-                <td className={LABEL}>الرصيد</td>
+                <td className={LABEL}>المتبقي</td>
                 <td className={VALUE}>{balance}</td>
               </>
             )}
@@ -112,23 +111,16 @@ export const VoucherDocument: React.FC<{ data: VoucherData; settings: WorkshopSe
       <div className="flex items-end justify-between gap-4 px-3 pt-3 pb-2.5 border-t border-slate-300">
         <div className="space-y-3">
           <div className="text-slate-500">
-            {data.kind === 'receipt' ? 'المستلم' : 'المحاسب'}: <span className="font-bold text-slate-800">{settings.managerName}</span>
+            المستلم: <span className="font-bold text-slate-800">{settings.managerName}</span>
           </div>
           <div className="w-28 border-b border-slate-400" />
         </div>
-        {data.kind === 'payment' ? (
-          <div className="space-y-3 text-center">
-            <div className="text-slate-500">توقيع المستلم</div>
-            <div className="w-28 border-b border-slate-400" />
-          </div>
-        ) : (
-          <div className="w-20 h-10 border border-dashed border-slate-400 rounded-[4px] flex items-center justify-center text-[10px] text-slate-400">
-            الختم
-          </div>
-        )}
+        <div className="w-20 h-10 border border-dashed border-slate-400 rounded-[4px] flex items-center justify-center text-[10px] text-slate-400">
+          الختم
+        </div>
       </div>
 
-      {data.kind === 'receipt' && settings.receiptFooter && (
+      {settings.receiptFooter && (
         <div className="px-3 py-1 border-t border-slate-200 text-[10px] text-slate-500 text-center">{settings.receiptFooter}</div>
       )}
     </div>
@@ -143,14 +135,14 @@ export const VoucherModal: React.FC<{
   settings: WorkshopSettings;
 }> = ({ isOpen, onClose, data, settings }) => {
   if (!data) return null;
-  const id = `voucher-${data.kind}`;
-  const fileName = `${TITLE[data.kind]}_${data.number}_${data.party.trim().replace(/\s+/g, '_')}`;
+  const id = 'voucher-receipt';
+  const fileName = `${TITLE}_${data.number}_${data.party.trim().replace(/\s+/g, '_')}`;
 
   return (
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title={TITLE[data.kind]}
+      title={TITLE}
       maxWidth="md"
       headerActions={
         <button

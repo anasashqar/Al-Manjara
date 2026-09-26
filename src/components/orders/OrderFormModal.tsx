@@ -1,11 +1,14 @@
 import React, { useState, useEffect } from 'react';
+import { Trash2 } from 'lucide-react';
 import { Modal } from '../common/Modal';
 import { todayISO } from '../../utils/date';
 import type { Order, PaymentMethodItem, WorkStage } from '../../types';
 
 import { StageDropdown } from './StageDropdown';
-import type { InitialDeposit } from '../../db/dexie';
-import { notify } from '../common/Dialogs';
+import { deleteOrder, type InitialDeposit } from '../../db/dexie';
+import { ask, notify } from '../common/Dialogs';
+import { num } from '../../utils/format';
+import { docNo } from '../../utils/docNumber';
 
 interface OrderFormModalProps {
   isOpen: boolean;
@@ -81,6 +84,27 @@ export const OrderFormModal: React.FC<OrderFormModalProps> = ({
     } catch (err: any) {
       console.error('Error saving order:', err);
       notify(err?.message || 'تعذر الحفظ');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  // حذف نهائي: الطلبية وسندات قبضها تختفي من كل الحسابات كأنها لم تُسجَّل
+  const handleDelete = async () => {
+    if (!initialOrder) return;
+    const paid = initialOrder.paidAmount || 0;
+    const ok = await ask(`حذف طلبية ${initialOrder.customerName} (${docNo(initialOrder.orderNumber)})؟`, {
+      message: paid > 0 ? `تُحذف معها دفعات ${num(paid)} ₪` : undefined,
+    });
+    if (!ok) return;
+    setIsSubmitting(true);
+    try {
+      await deleteOrder(initialOrder.id);
+      onClose();
+      notify('حُذفت الطلبية', 'success');
+    } catch (err: any) {
+      console.error('Error deleting order:', err);
+      notify(err?.message || 'تعذر الحذف');
     } finally {
       setIsSubmitting(false);
     }
@@ -196,21 +220,34 @@ export const OrderFormModal: React.FC<OrderFormModalProps> = ({
         </div>
 
         {/* Action Buttons */}
-        <div className="flex justify-end gap-2 pt-2 border-t border-slate-200">
-          <button
-            type="button"
-            onClick={onClose}
-            className="h-8 px-4 rounded-[6px] border border-slate-300 text-slate-700 hover:bg-slate-100 font-medium"
-          >
-            إلغاء
-          </button>
-          <button
-            type="submit"
-            disabled={isSubmitting}
-            className="h-8 px-5 rounded-[6px] bg-[#166534] hover:bg-[#14532d] text-white font-semibold shadow-xs disabled:opacity-50"
-          >
-            {isSubmitting ? 'حفظ...' : 'حفظ'}
-          </button>
+        <div className="flex items-center gap-2 pt-2 border-t border-slate-200">
+          {isEditing && (
+            <button
+              type="button"
+              onClick={handleDelete}
+              disabled={isSubmitting}
+              className="h-8 inline-flex items-center gap-1.5 px-3 rounded-[6px] text-[#b91c1c] hover:bg-rose-50 font-medium disabled:opacity-50"
+            >
+              <Trash2 className="w-4 h-4" />
+              حذف
+            </button>
+          )}
+          <div className="mr-auto flex gap-2">
+            <button
+              type="button"
+              onClick={onClose}
+              className="h-8 px-4 rounded-[6px] border border-slate-300 text-slate-700 hover:bg-slate-100 font-medium"
+            >
+              إلغاء
+            </button>
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              className="h-8 px-5 rounded-[6px] bg-[#166534] hover:bg-[#14532d] text-white font-semibold shadow-xs disabled:opacity-50"
+            >
+              {isSubmitting ? 'حفظ...' : 'حفظ'}
+            </button>
+          </div>
         </div>
       </form>
     </Modal>

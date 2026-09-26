@@ -1,5 +1,4 @@
 import type { Expense, ExpenseCategory, Order, PaymentTransaction, SupplierDebt } from '../types';
-import { inPeriod, monthKey, type Period } from './period';
 
 // طلبية بالانتظار لم يُدفع عليها شيء = استفسار، ليست بيعاً ولا ديناً بعد
 export const isUnconfirmedWaiting = (o: Order) =>
@@ -35,143 +34,66 @@ const round2 = (n: number) => Math.round(n * 100) / 100;
 export const customerKey = (o: Pick<Order, 'customerName' | 'customerPhone'>) =>
   o.customerPhone?.trim() || o.customerName.trim();
 
-export interface PeriodSummary {
-  newOrdersCount: number;
-  newOrdersValue: number;    // قيمة الطلبيات المسجلة في الفترة (غير الملغاة)
-  collected: number;         // المقبوض فعلياً من الزبائن في الفترة
-  receiptsCount: number;
-  discounts: number;         // الخصومات الممنوحة في الفترة
-  expenses: number;          // المصروفات المدفوعة في الفترة (تشمل سداد الموردين)
-  net: number;               // صافي الربح النقدي = المقبوضات - المصروفات
-  margin: number | null;     // نسبة الربح من المقبوضات
-  supplierPaid: number;      // منها: المدفوع للموردين
-  // أرصدة حالية (لا تخص فترة: الدين قائم حتى يُسدَّد)
-  openReceivables: number;
-  openReceivablesCount: number;
-  supplierPayables: number;
-  byMethod: { name: string; amount: number }[];
-  byCategory: { category: ExpenseCategory; label: string; amount: number }[];
-}
+// ───────── حساب الأسبوع (من آخر إقفال) ─────────
 
-export function summarizePeriod(
-  period: Period,
-  orders: Order[],
-  payments: PaymentTransaction[],
-  expenses: Expense[],
-  suppliers: SupplierDebt[]
-): PeriodSummary {
-  const periodOrders = orders.filter((o) => isActiveOrder(o) && inPeriod(o.orderDate, period));
-  const receipts = payments.filter((p) => p.type === 'customer_in' && inPeriod(p.date, period));
-  const periodExpenses = expenses.filter((e) => inPeriod(e.date, period));
-  const receivables = orders.filter(isReceivable);
-
-  const collected = round2(receipts.reduce((s, p) => s + p.amount, 0));
-  const expenseTotal = round2(periodExpenses.reduce((s, e) => s + e.amount, 0));
-  const net = round2(collected - expenseTotal);
-
-  const methodTotals = new Map<string, number>();
-  for (const p of receipts) {
-    methodTotals.set(p.paymentMethod, (methodTotals.get(p.paymentMethod) || 0) + p.amount);
-  }
-
-  const categoryTotals = new Map<ExpenseCategory, number>();
-  for (const e of periodExpenses) {
-    categoryTotals.set(e.category, (categoryTotals.get(e.category) || 0) + e.amount);
-  }
-
-  return {
-    newOrdersCount: periodOrders.length,
-    newOrdersValue: round2(periodOrders.reduce((s, o) => s + o.totalAmount, 0)),
-    collected,
-    receiptsCount: receipts.length,
-    discounts: round2(receipts.reduce((s, p) => s + (p.discountAmount || 0), 0)),
-    expenses: expenseTotal,
-    net,
-    margin: collected > 0 ? Math.round((net / collected) * 100) : null,
-    supplierPaid: round2(periodExpenses.filter((e) => e.linkedPaymentId).reduce((s, e) => s + e.amount, 0)),
-    openReceivables: round2(receivables.reduce((s, o) => s + o.remainingAmount, 0)),
-    openReceivablesCount: receivables.length,
-    supplierPayables: round2(suppliers.reduce((s, x) => s + x.remainingDebt, 0)),
-    byMethod: [...methodTotals]
-      .map(([name, amount]) => ({ name, amount: round2(amount) }))
-      .sort((a, b) => b.amount - a.amount),
-    byCategory: [...categoryTotals]
-      .map(([category, amount]) => ({
-        category,
-        label: EXPENSE_CATEGORY_LABELS[category] || category,
-        amount: round2(amount),
-      }))
-      .sort((a, b) => b.amount - a.amount),
-  };
-}
-
-export interface BreakdownRow {
-  key: string;       // YYYY-MM أو YYYY
-  year: number;
-  month: number | null;
-  ordersValue: number;
-  collected: number;
-  expenses: number;
-  net: number;
+export interface LedgerRow {
+  id: string;
+  kind: 'in' | 'out';
+  date: string;
+  title: string;
+  detail?: string;
+  amount: number;
+  createdAt: number;
+  payment?: PaymentTransaction;
+  expense?: Expense;
 }
 
 /**
- * تفصيل الأرقام: 12 شهراً إذا كانت الفترة سنة كاملة،
- * أو سنة بسنة إذا كانت الفترة "كل الفترات".
+ * حركات أسبوع واحد: المقبوض من الزبائن (+) والمصروفات (−) بالترتيب الزمني.
+ * closingId فارغ = الأسبوع المفتوح. سند صرف المورد له مصروف مرتبط فلا يُعدّ مرتين.
  */
-export function periodBreakdown(
-  period: Period,
-  orders: Order[],
-  payments: PaymentTransaction[],
-  expenses: Expense[]
-): BreakdownRow[] {
-  const byYear = period.year === null;
-  const keyOf = (date: string) => (byYear ? date.slice(0, 4) : monthKey(date));
-  const rows = new Map<string, BreakdownRow>();
+export function weekLedger(payments: PaymentTransaction[], expenses: Expense[], closingId?: string): LedgerRow[] {
+  const inWeek = (x: { closingId?: string }) => (x.closingId || undefined) === closingId;
+  const rows: LedgerRow[] = [
+    ...payments
+      .filter((p) => p.type === 'customer_in' && p.amount > 0 && inWeek(p))
+      .map((p) => ({
+        id: p.id,
+        kind: 'in' as const,
+        date: p.date,
+        title: p.partyName,
+        detail: p.itemPurpose,
+        amount: p.amount,
+        createdAt: p.createdAt,
+        payment: p,
+      })),
+    ...expenses.filter(inWeek).map((e) => ({
+      id: e.id,
+      kind: 'out' as const,
+      date: e.date,
+      title: e.title,
+      amount: e.amount,
+      createdAt: e.createdAt,
+      expense: e,
+    })),
+  ];
+  return rows.sort((a, b) => a.date.localeCompare(b.date) || a.createdAt - b.createdAt);
+}
 
-  const row = (key: string): BreakdownRow => {
-    let r = rows.get(key);
-    if (!r) {
-      r = {
-        key,
-        year: parseInt(key.slice(0, 4), 10),
-        month: byYear ? null : parseInt(key.slice(5, 7), 10),
-        ordersValue: 0,
-        collected: 0,
-        expenses: 0,
-        net: 0,
-      };
-      rows.set(key, r);
-    }
-    return r;
-  };
+export function ledgerTotals(rows: LedgerRow[]) {
+  const collected = round2(rows.filter((r) => r.kind === 'in').reduce((s, r) => s + r.amount, 0));
+  const expenses = round2(rows.filter((r) => r.kind === 'out').reduce((s, r) => s + r.amount, 0));
+  return { collected, expenses, net: round2(collected - expenses) };
+}
 
-  // أشهر السنة حتى الشهر الحالي فقط (لا أعمدة فارغة لأشهر لم تأتِ بعد)
-  if (!byYear) {
-    const now = new Date();
-    const lastMonth =
-      period.year! < now.getFullYear() ? 12 : period.year === now.getFullYear() ? now.getMonth() + 1 : 0;
-    for (let m = 1; m <= lastMonth; m++) row(`${period.year}-${String(m).padStart(2, '0')}`);
+// تجميع مبالغ حسب مفتاح (بيان المصروف، وسيلة القبض...) من الأكبر للأصغر
+export function groupTotals(rows: LedgerRow[], keyOf: (r: LedgerRow) => string) {
+  const totals = new Map<string, number>();
+  for (const r of rows) {
+    const key = keyOf(r).trim() || '—';
+    totals.set(key, (totals.get(key) || 0) + r.amount);
   }
-
-  const scope: Period = { year: period.year, month: null };
-  for (const o of orders) {
-    if (isActiveOrder(o) && o.orderDate && inPeriod(o.orderDate, scope)) row(keyOf(o.orderDate)).ordersValue += o.totalAmount;
-  }
-  for (const p of payments) {
-    if (p.type === 'customer_in' && p.date && inPeriod(p.date, scope)) row(keyOf(p.date)).collected += p.amount;
-  }
-  for (const e of expenses) {
-    if (e.date && inPeriod(e.date, scope)) row(keyOf(e.date)).expenses += e.amount;
-  }
-
-  return [...rows.values()]
-    .map((r) => ({
-      ...r,
-      ordersValue: round2(r.ordersValue),
-      collected: round2(r.collected),
-      expenses: round2(r.expenses),
-      net: round2(r.collected - r.expenses),
-    }))
-    .sort((a, b) => a.key.localeCompare(b.key));
+  return [...totals]
+    .map(([label, amount]) => ({ label, amount: round2(amount) }))
+    .sort((a, b) => b.amount - a.amount);
 }

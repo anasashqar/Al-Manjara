@@ -3,7 +3,8 @@ import { Plus, Search, Trash2, Edit2 } from 'lucide-react';
 import { deleteExpense } from '../../db/dexie';
 import type { Expense, WorkshopSettings } from '../../types';
 import { newestFirst } from '../../utils/docNumber';
-import { ask } from '../common/Dialogs';
+import { ask, notify } from '../common/Dialogs';
+import { formatDayMonth } from '../../utils/period';
 
 interface ExpensesViewProps {
   expenses: Expense[];
@@ -19,9 +20,11 @@ export const ExpensesView: React.FC<ExpensesViewProps> = ({
 }) => {
   const [searchQuery, setSearchQuery] = useState('');
 
+  // الأسبوع المفتوح فقط؛ المصاريف المُقفلة في المالية ← الأسابيع المُقفلة
   const filteredExpenses = useMemo(() => {
     return expenses
       .filter((e) => {
+        if (e.closingId) return false;
         if (!searchQuery.trim()) return true;
         const q = searchQuery.toLowerCase();
         return (
@@ -40,10 +43,13 @@ export const ExpensesView: React.FC<ExpensesViewProps> = ({
   const handleDelete = async (exp: Expense, e: React.MouseEvent) => {
     e.stopPropagation();
     const ok = await ask('حذف المصروف؟', {
-      message: exp.linkedPaymentId ? 'سيُحذف سند الصرف المرتبط ويعود المبلغ على المورد' : exp.title,
+      message: exp.linkedPaymentId ? 'يُحذف معه سند الصرف' : exp.title,
     });
-    if (ok) {
+    if (!ok) return;
+    try {
       await deleteExpense(exp.id);
+    } catch (err: any) {
+      notify(err?.message || 'تعذر الحذف');
     }
   };
 
@@ -87,10 +93,8 @@ export const ExpensesView: React.FC<ExpensesViewProps> = ({
         <table className="w-full text-right text-xs sm:text-sm border-collapse">
           <thead className="sticky top-0 z-10 bg-[#e9f0eb] text-slate-900 font-bold border-b-2 border-[#d2dfd6]">
             <tr>
-              <th className="py-2.5 px-3 text-center border-l border-[#d2dfd6]/60 w-24">الرقم</th>
               <th className="py-2.5 px-3 border-l border-[#d2dfd6]/60">البيان</th>
               <th className="py-2.5 px-3 text-center border-l border-[#d2dfd6]/60 w-32">المبلغ</th>
-              <th className="py-2.5 px-3 text-center border-l border-[#d2dfd6]/60 w-32">الوسيلة</th>
               <th className="py-2.5 px-3 text-center border-l border-[#d2dfd6]/60 w-28">التاريخ</th>
               <th className="py-2.5 px-3 text-center w-24"></th>
             </tr>
@@ -98,29 +102,21 @@ export const ExpensesView: React.FC<ExpensesViewProps> = ({
           <tbody className="divide-y divide-slate-200 font-sans">
             {filteredExpenses.length === 0 ? (
               <tr>
-                <td colSpan={6} className="py-12 text-center text-slate-400 font-medium">
+                <td colSpan={4} className="py-12 text-center text-slate-400 font-medium">
                   لا مصروفات
                 </td>
               </tr>
             ) : (
               filteredExpenses.map((exp) => (
                 <tr key={exp.id} className="hover:bg-amber-50/15 transition-colors">
-                  <td className="py-3 px-3 text-center font-mono font-bold text-slate-800 border-l border-slate-200">
-                    {exp.expenseNumber}
-                  </td>
                   <td className="py-3 px-3 border-l border-slate-200">
                     <span className="font-semibold text-slate-900">{exp.title}</span>
                   </td>
                   <td className="py-3 px-3 text-center border-l border-slate-200 font-mono font-bold text-[#b91c1c]">
                     {exp.amount.toLocaleString('ar-SA')}
                   </td>
-                  <td className="py-3 px-3 text-center border-l border-slate-200">
-                    <span className="px-2.5 py-0.5 rounded-[6px] bg-slate-100 text-xs font-medium text-slate-700">
-                      {exp.paymentMethod}
-                    </span>
-                  </td>
-                  <td className="py-3 px-3 text-center border-l border-slate-200 font-mono text-xs text-slate-600">
-                    {exp.date}
+                  <td className="py-3 px-3 text-center border-l border-slate-200 text-xs text-slate-600">
+                    {formatDayMonth(exp.date)}
                   </td>
                   <td className="py-3 px-3 text-center">
                     <div className="flex items-center justify-center gap-1.5">

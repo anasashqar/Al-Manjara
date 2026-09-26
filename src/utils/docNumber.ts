@@ -36,6 +36,24 @@ export function parseDocNumber(n: string | undefined): { kind: DocKind; seq: num
 
 export const formatDocNumber = (kind: DocKind, seq: number) => `${DOC_PREFIX[kind]}-${seq}`;
 
+// للعرض: الرقم فقط بلا رمز النوع (ق-15 ← 15)، فالنوع واضح من مكان ظهوره
+export function docNo(n: string | undefined): string {
+  const p = parseDocNumber(n);
+  if (p) return String(p.seq);
+  // قيود التسوية القديمة مثل "رصيد-سابق/ط-2"
+  return n?.startsWith('رصيد') ? 'رصيد سابق' : n || '';
+}
+
+// بيان الدفعة بكلمة واحدة: النصوص القديمة "دفعة عربون للطلبية ط-15" ← "عربون"
+export function shortPurpose(text: string): string {
+  if (text.startsWith('دفعة عربون')) return 'عربون';
+  if (/^دفعة من طلبية/.test(text)) return 'دفعة';
+  return plainDocText(text);
+}
+
+// يزيل رموز الأنواع من نص محفوظ سابقاً، مثل "دفعة من طلبية ط-15"
+export const plainDocText = (text: string) => text.replace(/(^|[\s(])(?:ق|ص|ط|م|ف|ر)-(\d+)/g, '$1$2');
+
 export const counterKey = (kind: DocKind) => `doc:${kind}`;
 
 // أكبر تسلسل صادر لنوع معين

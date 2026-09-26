@@ -431,7 +431,7 @@ export const SAMPLE_NEEDS: WorkshopNeed[] = [
 export async function injectSampleDataToDatabase() {
   await db.transaction(
     'rw',
-    [db.orders, db.expenses, db.paymentTransactions, db.supplierDebts, db.supplierInvoices, db.workshopNeeds, db.paymentMethods, db.settings],
+    [db.orders, db.expenses, db.paymentTransactions, db.supplierDebts, db.supplierInvoices, db.workshopNeeds, db.weekClosings, db.paymentMethods, db.settings],
     async () => {
       await db.orders.clear();
       await db.expenses.clear();
@@ -439,6 +439,7 @@ export async function injectSampleDataToDatabase() {
       await db.supplierDebts.clear();
       await db.supplierInvoices.clear();
       await db.workshopNeeds.clear();
+      await db.weekClosings.clear();
 
       const settingsCount = await db.settings.count();
       if (settingsCount === 0) {
@@ -467,7 +468,7 @@ export async function injectSampleDataToDatabase() {
 export async function wipeAllDataClean() {
   await db.transaction(
     'rw',
-    [db.orders, db.expenses, db.paymentTransactions, db.supplierDebts, db.supplierInvoices, db.workshopNeeds, db.settings],
+    [db.orders, db.expenses, db.paymentTransactions, db.supplierDebts, db.supplierInvoices, db.workshopNeeds, db.weekClosings, db.settings],
     async () => {
       await db.orders.clear();
       await db.expenses.clear();
@@ -475,6 +476,7 @@ export async function wipeAllDataClean() {
       await db.supplierDebts.clear();
       await db.supplierInvoices.clear();
       await db.workshopNeeds.clear();
+      await db.weekClosings.clear();
       // البداية من جديد تعني أيضاً بدء ترقيم السندات من 1
       await db.settings.update('current_workshop', { receiptCounters: {} });
     }

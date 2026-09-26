@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Save, Upload, X, Paperclip } from 'lucide-react';
+import { Save, Upload, X, Paperclip, ChevronDown } from 'lucide-react';
 import { Modal } from '../common/Modal';
 import { addCustomerPayment } from '../../db/dexie';
 import { todayISO } from '../../utils/date';
@@ -36,6 +36,8 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
   const [attachmentData, setAttachmentData] = useState<string | null>(null);
   const [attachmentName, setAttachmentName] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  // البيان والتاريخ والإشعار والملاحظات نادراً ما تتغير، فتبقى مطوية
+  const [showMore, setShowMore] = useState(false);
 
   // Active payment methods
   const activeMethods = paymentMethods.filter((m) => m.isActive);
@@ -50,7 +52,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
 
   useEffect(() => {
     if (currentOrder) {
-      setItemPurpose(`دفعة من طلبية ${currentOrder.orderNumber}`);
+      setItemPurpose('دفعة');
       setAmount(currentOrder.remainingAmount > 0 ? currentOrder.remainingAmount : '');
       setHasDiscount(false);
       setDiscountAmount('');
@@ -60,6 +62,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
       setNotes('');
       setAttachmentData(null);
       setAttachmentName(null);
+      setShowMore(false);
     }
   }, [currentOrder?.id, isOpen]);
 
@@ -84,11 +87,11 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
     e.preventDefault();
     const numAmount = Number(amount) || 0;
     if (numAmount < 0 || discountVal < 0 || numAmount + discountVal <= 0) {
-      notify('أدخل مبلغاً صحيحاً');
+      notify('المبلغ غير صحيح');
       return;
     }
     if (numAmount + discountVal > remaining + 0.005) {
-      notify(`المبلغ مع الخصم أكبر من المتبقي (${remaining.toLocaleString('ar-SA')} ₪)`);
+      notify(`أكبر من المتبقي (${remaining.toLocaleString('ar-SA')} ₪)`);
       return;
     }
 
@@ -132,7 +135,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
             >
               {selectableOrders.map((o) => (
                 <option key={o.id} value={o.id}>
-                  {o.customerName} — {o.orderNumber} — متبقي {o.remainingAmount.toLocaleString('ar-SA')}
+                  {o.customerName} — {o.description} — متبقي {o.remainingAmount.toLocaleString('ar-SA')}
                 </option>
               ))}
             </select>
@@ -152,22 +155,8 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
           </div>
         </div>
 
-        {/* Row 1: Purpose & Amount */}
+        {/* المبلغ والوسيلة */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-          <div>
-            <label className="block text-slate-700 font-semibold mb-1">
-              البيان *
-            </label>
-            <input
-              type="text"
-              required
-              value={itemPurpose}
-              onChange={(e) => setItemPurpose(e.target.value)}
-              
-              className="w-full px-2.5 py-1.5 rounded-[4px] border border-slate-300 focus:ring-1 focus:ring-[#166534] bg-white text-slate-900 placeholder:text-slate-400"
-            />
-          </div>
-
           <div>
             <label className="block text-slate-700 font-semibold mb-1">
               المبلغ *
@@ -183,20 +172,47 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
               className="w-full px-2.5 py-1.5 rounded-[4px] border border-slate-300 focus:ring-1 focus:ring-[#166534] bg-white font-mono font-bold text-sm text-slate-900"
             />
           </div>
+
+          <div>
+            <label className="block text-slate-700 font-semibold mb-1">
+              الوسيلة
+            </label>
+            <select
+              value={paymentMethod}
+              onChange={(e) => setPaymentMethod(e.target.value)}
+              className="w-full px-2.5 py-1.5 rounded-[4px] border border-slate-300 focus:ring-1 focus:ring-[#166534] bg-white"
+            >
+              {activeMethods.map((m) => (
+                <option key={m.id} value={m.name}>
+                  {m.name}
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
 
-        {/* Checkbox: Discount on payment */}
-        <div className="flex items-center gap-2 pt-0.5">
-          <input
-            id="discount-check"
-            type="checkbox"
-            checked={hasDiscount}
-            onChange={(e) => setHasDiscount(e.target.checked)}
-            className="w-3.5 h-3.5 rounded-[4px] text-emerald-600 border-slate-300 focus:ring-emerald-500 cursor-pointer accent-[#166534]"
-          />
-          <label htmlFor="discount-check" className="text-slate-700 select-none cursor-pointer text-xs">
-            خصم
-          </label>
+        {/* خصم + خيارات أكثر */}
+        <div className="flex items-center justify-between gap-2 pt-0.5">
+          <div className="flex items-center gap-2">
+            <input
+              id="discount-check"
+              type="checkbox"
+              checked={hasDiscount}
+              onChange={(e) => setHasDiscount(e.target.checked)}
+              className="w-3.5 h-3.5 rounded-[4px] text-emerald-600 border-slate-300 focus:ring-emerald-500 cursor-pointer accent-[#166534]"
+            />
+            <label htmlFor="discount-check" className="text-slate-700 select-none cursor-pointer text-xs">
+              خصم
+            </label>
+          </div>
+          <button
+            type="button"
+            onClick={() => setShowMore((v) => !v)}
+            className="inline-flex items-center gap-1 text-xs text-slate-500 hover:text-slate-800"
+          >
+            المزيد
+            <ChevronDown className={`w-3.5 h-3.5 transition-transform ${showMore ? 'rotate-180' : ''}`} />
+          </button>
         </div>
 
         {hasDiscount && (
@@ -217,86 +233,66 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
           </div>
         )}
 
-        {/* Row 2: Payment Method & Date */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-          <div>
-            <label className="block text-slate-700 font-semibold mb-1">
-              الوسيلة *
-            </label>
-            <select
-              value={paymentMethod}
-              onChange={(e) => setPaymentMethod(e.target.value)}
-              className="w-full px-2.5 py-1.5 rounded-[4px] border border-slate-300 focus:ring-1 focus:ring-[#166534] bg-white"
-            >
-              {activeMethods.map((m) => (
-                <option key={m.id} value={m.name}>
-                  {m.name}
-                </option>
-              ))}
-            </select>
-          </div>
+        {showMore && (
+          <div className="space-y-3 p-2.5 bg-slate-50 rounded-[4px] border border-slate-200">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+              <div>
+                <label className="block text-slate-700 font-semibold mb-1">البيان</label>
+                <input
+                  type="text"
+                  value={itemPurpose}
+                  onChange={(e) => setItemPurpose(e.target.value)}
+                  className="w-full px-2.5 py-1.5 rounded-[4px] border border-slate-300 focus:ring-1 focus:ring-[#166534] bg-white text-slate-900"
+                />
+              </div>
+              <div>
+                <label className="block text-slate-700 font-semibold mb-1">التاريخ</label>
+                <input
+                  type="date"
+                  required
+                  value={date}
+                  onChange={(e) => setDate(e.target.value)}
+                  className="w-full px-2.5 py-1.5 rounded-[4px] border border-slate-300 focus:ring-1 focus:ring-[#166534] bg-white font-mono"
+                />
+              </div>
+            </div>
 
-          <div>
-            <label className="block text-slate-700 font-semibold mb-1">
-              التاريخ *
-            </label>
-            <input
-              type="date"
-              required
-              value={date}
-              onChange={(e) => setDate(e.target.value)}
-              className="w-full px-2.5 py-1.5 rounded-[4px] border border-slate-300 focus:ring-1 focus:ring-[#166534] bg-white font-mono"
-            />
-          </div>
-        </div>
+            {/* إشعار تحويل بنكي أو محفظة */}
+            <div className="flex items-center gap-2">
+              <label className="inline-flex items-center gap-1.5 px-3 py-1 rounded-[6px] border border-slate-300 bg-white hover:bg-slate-100 cursor-pointer text-slate-700 text-xs font-medium">
+                <Upload className="w-3.5 h-3.5" />
+                <span>رفع إشعار</span>
+                <input type="file" accept="image/*" onChange={handleFileUpload} className="hidden" />
+              </label>
+              {attachmentName && (
+                <span className="inline-flex items-center gap-1 text-[11px] text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded-[6px] border border-emerald-200">
+                  <Paperclip className="w-3 h-3" />
+                  <span className="truncate max-w-[200px]">{attachmentName}</span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setAttachmentData(null);
+                      setAttachmentName(null);
+                    }}
+                    className="text-slate-400 hover:text-rose-600"
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
+                </span>
+              )}
+            </div>
 
-        {/* Bank / Wallet Transfer Receipt Upload */}
-        <div>
-          <label className="block text-slate-700 font-semibold mb-1">
-            إشعار
-          </label>
-          <div className="flex items-center gap-2">
-            <label className="inline-flex items-center gap-1.5 px-3 py-1 rounded-[6px] border border-slate-300 bg-slate-50 hover:bg-slate-100 cursor-pointer text-slate-700 text-xs font-medium">
-              <Upload className="w-3.5 h-3.5" />
-              <span>رفع إشعار</span>
-              <input
-                type="file"
-                accept="image/*"
-                onChange={handleFileUpload}
-                className="hidden"
+            <div>
+              <label className="block text-slate-700 font-semibold mb-1">ملاحظات</label>
+              <textarea
+                rows={2}
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                className="w-full px-2.5 py-1.5 rounded-[4px] border border-slate-300 focus:ring-1 focus:ring-[#166534] bg-white"
               />
-            </label>
-            {attachmentName && (
-              <span className="inline-flex items-center gap-1 text-[11px] text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded-[6px] border border-emerald-200">
-                <Paperclip className="w-3 h-3" />
-                <span className="truncate max-w-[200px]">{attachmentName}</span>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setAttachmentData(null);
-                    setAttachmentName(null);
-                  }}
-                  className="text-slate-400 hover:text-rose-600"
-                >
-                  <X className="w-3 h-3" />
-                </button>
-              </span>
-            )}
+            </div>
           </div>
-        </div>
-
-        {/* Notes */}
-        <div>
-          <label className="block text-slate-700 font-semibold mb-1">
-            ملاحظات
-          </label>
-          <textarea
-            rows={2}
-            value={notes}
-            onChange={(e) => setNotes(e.target.value)}
-            className="w-full px-2.5 py-1.5 rounded-[4px] border border-slate-300 focus:ring-1 focus:ring-[#166534] bg-white"
-          />
-        </div>
+        )}
 
         {/* Action Buttons */}
         <div className="flex items-center justify-start gap-2 pt-2 border-t border-slate-200">

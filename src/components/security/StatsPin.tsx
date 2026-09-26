@@ -3,7 +3,6 @@ import { Lock } from 'lucide-react';
 import { Modal } from '../common/Modal';
 import { resetPinWithRecovery, setStatsPin } from '../../db/dexie';
 import { PIN_LENGTH, verifyPin } from '../../utils/pin';
-import { DOC_LABELS, DOC_PREFIX, type DocKind } from '../../utils/docNumber';
 import type { WorkshopSettings } from '../../types';
 import { ask } from '../common/Dialogs';
 
@@ -188,7 +187,6 @@ export const StatsPinSettings: React.FC<{ settings: WorkshopSettings }> = ({ set
       <div className="flex items-center justify-between border-b border-slate-200 pb-2">
         <div>
           <h2 className="font-bold text-slate-900 text-sm font-display">رمز الحماية</h2>
-          <p className="text-[11px] text-slate-500">للإحصاءات والإعدادات. عند النسيان: «نسيت الرمز؟»</p>
         </div>
         <span className={`text-xs font-semibold ${hasPin ? 'text-[#15803d]' : 'text-slate-400'}`}>
           {hasPin ? 'مفعّل' : 'غير مفعّل'}
@@ -237,20 +235,3 @@ export const StatsPinSettings: React.FC<{ settings: WorkshopSettings }> = ({ set
     </div>
   );
 };
-
-// ───────── رموز المستندات ─────────
-const LEGEND: DocKind[] = ['R', 'P', 'O', 'E', 'I', 'OB'];
-
-export const DocCodesLegend: React.FC = () => (
-  <div className="bg-white p-3.5 sm:p-4 rounded-[4px] border border-slate-300 space-y-2.5 shadow-2xs">
-    <h2 className="font-bold text-slate-900 text-sm font-display border-b border-slate-200 pb-2">رموز المستندات</h2>
-    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 text-xs">
-      {LEGEND.map((k) => (
-        <div key={k} className="flex items-center gap-2 border border-slate-200 rounded-[4px] px-2.5 py-1.5">
-          <span className="font-bold text-[#166534] whitespace-nowrap">{DOC_PREFIX[k]}-15</span>
-          <span className="text-slate-600">{DOC_LABELS[k]}</span>
-        </div>
-      ))}
-    </div>
-  </div>
-);

@@ -8,8 +8,10 @@ import type {
   WorkshopSettings,
   PaymentMethodItem,
   ExpenseCategory,
-  WorkshopNeed
+  WorkshopNeed,
+  WeekClosing
 } from '../types';
+import { ledgerTotals, weekLedger } from '../utils/finance';
 import { todayISO } from '../utils/date';
 import { hashPin, isValidPin, verifyRecoveryWord } from '../utils/pin';
 import {
@@ -19,6 +21,7 @@ import {
   maxDocSeq,
   parseDocNumber,
   type DocKind,
+  docNo,
 } from '../utils/docNumber';
 
 export class AlManjaraDatabase extends Dexie {
@@ -30,6 +33,7 @@ export class AlManjaraDatabase extends Dexie {
   paymentMethods!: Table<PaymentMethodItem, string>;
   settings!: Table<WorkshopSettings, string>;
   workshopNeeds!: Table<WorkshopNeed, string>;
+  weekClosings!: Table<WeekClosing, string>;
 
   constructor() {
     super('AlManjaraDB');
@@ -85,6 +89,8 @@ export class AlManjaraDatabase extends Dexie {
         if (o.workStage === 'ready_install') o.workStage = 'finishing';
       });
     });
+    // v9: إقفال الأسبوع
+    this.version(9).stores({ weekClosings: 'id, seq, closedAt' });
   }
 }
 
@@ -98,7 +104,7 @@ export const DEFAULT_SETTINGS: WorkshopSettings = {
   phone: '0599123456',
   address: 'دير البلح - البركة',
   currency: 'شيكل',
-  receiptFooter: 'المتبقي يستحق عند التسليم والتركيب. شكراً لثقتكم.',
+  receiptFooter: 'شكراً لثقتكم',
   supabaseUrl: '',
   supabaseAnonKey: '',
   autoSync: false,
@@ -379,10 +385,10 @@ export async function createOrder(
   // طلبية بالانتظار قد لا يكون سعرها محدداً بعد
   const isWaiting = (data.workStage || 'waiting') === 'waiting';
   const totalAmount = round2(Number(data.totalAmount) || 0);
-  if (totalAmount <= 0 && !isWaiting) throw new Error('يرجى إدخال مبلغ الطلبية');
+  if (totalAmount <= 0 && !isWaiting) throw new Error('أدخل المبلغ');
   const depositAmount = isWaiting ? 0 : round2(Number(deposit?.amount) || 0);
-  if (depositAmount < 0) throw new Error('مبلغ العربون غير صالح');
-  if (depositAmount > totalAmount + EPS) throw new Error('العربون أكبر من مبلغ الطلبية');
+  if (depositAmount < 0) throw new Error('عربون غير صالح');
+  if (depositAmount > totalAmount + EPS) throw new Error('العربون أكبر من المبلغ');
 
   return db.transaction('rw', [db.orders, db.paymentTransactions, db.settings], async () => {
     const now = Date.now();
@@ -414,7 +420,7 @@ export async function createOrder(
       const payment = await insertCustomerPayment(order, {
         amount: depositAmount,
         paymentMethod: deposit!.paymentMethod,
-        itemPurpose: `دفعة عربون للطلبية ${order.orderNumber}`,
+        itemPurpose: 'عربون',
         date: order.orderDate,
       });
       return { order: await recalcOrder(order.id), payment };
@@ -438,10 +444,10 @@ export async function updateOrder(orderId: string, data: OrderInput): Promise<Or
       const newTotal = round2(Number(changes.totalAmount) || 0);
       const settled = round2(order.paidAmount + (order.discountTotal || 0));
       const staysWaiting = (changes.workStage ?? order.workStage) === 'waiting';
-      if (newTotal <= 0 && !staysWaiting) throw new Error('يرجى إدخال مبلغ الطلبية');
+      if (newTotal <= 0 && !staysWaiting) throw new Error('أدخل المبلغ');
       if (newTotal + EPS < settled) {
         throw new Error(
-          `لا يمكن أن يكون مبلغ الطلبية أقل مما تم سداده (${settled.toLocaleString('ar-SA')} ₪)`
+          `المبلغ أقل من المدفوع (${settled.toLocaleString('ar-SA')} ₪)`
         );
       }
       changes.totalAmount = newTotal;
@@ -464,6 +470,8 @@ export async function countOrderPayments(orderId: string): Promise<number> {
 // حذف الطلبية مع سندات القبض التابعة لها حتى لا تبقى مقبوضات يتيمة في التقارير
 export async function deleteOrder(orderId: string): Promise<void> {
   await db.transaction('rw', db.orders, db.paymentTransactions, async () => {
+    const txs = await db.paymentTransactions.where('relatedId').equals(orderId).toArray();
+    if (txs.some((t) => t.closingId)) throw new Error('لها دفعات في أسبوع مُقفل');
     await db.paymentTransactions
       .where('relatedId')
       .equals(orderId)
@@ -493,12 +501,12 @@ async function insertCustomerPayment(
   const amount = round2(Number(input.amount) || 0);
   const discount = round2(Number(input.discountAmount) || 0);
 
-  if (amount < 0 || discount < 0) throw new Error('المبالغ يجب أن تكون موجبة');
-  if (amount + discount <= 0) throw new Error('يرجى إدخال مبلغ الدفعة');
-  if (order.status === 'cancelled') throw new Error('لا يمكن تسجيل دفعة على طلبية ملغاة');
+  if (amount < 0 || discount < 0) throw new Error('مبلغ غير صالح');
+  if (amount + discount <= 0) throw new Error('أدخل المبلغ');
+  if (order.status === 'cancelled') throw new Error('الطلبية ملغاة');
   if (amount + discount > order.remainingAmount + EPS) {
     throw new Error(
-      `المبلغ مع الخصم (${round2(amount + discount).toLocaleString('ar-SA')}) أكبر من المتبقي على الطلبية (${order.remainingAmount.toLocaleString('ar-SA')} ₪)`
+      `أكبر من المتبقي (${order.remainingAmount.toLocaleString('ar-SA')} ₪)`
     );
   }
 
@@ -508,7 +516,7 @@ async function insertCustomerPayment(
     type: 'customer_in',
     relatedId: order.id,
     partyName: order.customerName,
-    itemPurpose: input.itemPurpose?.trim() || `دفعة من طلبية رقم ${order.orderNumber}`,
+    itemPurpose: input.itemPurpose?.trim() || 'دفعة',
     amount,
     discountAmount: discount,
     remainingAfter: Math.max(0, round2(order.remainingAmount - amount - discount)),
@@ -624,7 +632,7 @@ export interface SupplierInput {
 
 export async function createSupplier(data: SupplierInput, openingBalance = 0): Promise<SupplierDebt> {
   const name = data.supplierName?.trim();
-  if (!name) throw new Error('يرجى إدخال اسم المورد');
+  if (!name) throw new Error('أدخل اسم المورد');
   const opening = round2(Number(openingBalance) || 0);
   if (opening < 0) throw new Error('الرصيد الافتتاحي غير صالح');
 
@@ -663,7 +671,7 @@ export async function createSupplier(data: SupplierInput, openingBalance = 0): P
 
 export async function updateSupplier(supplierId: string, data: Partial<SupplierInput>): Promise<void> {
   const name = data.supplierName?.trim();
-  if (data.supplierName !== undefined && !name) throw new Error('يرجى إدخال اسم المورد');
+  if (data.supplierName !== undefined && !name) throw new Error('أدخل اسم المورد');
   await db.transaction(
     'rw',
     [db.supplierDebts, db.supplierInvoices, db.paymentTransactions, db.expenses],
@@ -696,7 +704,7 @@ export async function deleteSupplier(supplierId: string): Promise<void> {
     const invoices = await db.supplierInvoices.where('supplierId').equals(supplierId).count();
     const payments = await db.paymentTransactions.where('relatedId').equals(supplierId).count();
     if (invoices + payments > 0) {
-      throw new Error('للمورد حركات مسجلة؛ لا يمكن حذفه');
+      throw new Error('للمورد حركات مسجلة');
     }
     await db.supplierDebts.delete(supplierId);
   });
@@ -715,7 +723,7 @@ export async function addSupplierInvoice(
   input: SupplierInvoiceInput
 ): Promise<SupplierInvoice> {
   const amount = round2(Number(input.amount) || 0);
-  if (amount <= 0) throw new Error('يرجى إدخال مبلغ الفاتورة');
+  if (amount <= 0) throw new Error('أدخل المبلغ');
   return db.transaction('rw', [db.supplierDebts, db.supplierInvoices, db.paymentTransactions, db.settings], async () => {
     const supplier = await db.supplierDebts.get(supplierId);
     if (!supplier) throw new Error('المورد غير موجود');
@@ -744,7 +752,7 @@ export async function deleteSupplierInvoice(invoiceId: string): Promise<void> {
     if (!invoice) return;
     const supplier = await recalcSupplier(invoice.supplierId);
     if (supplier.totalInvoiced - invoice.amount + EPS < supplier.totalPaid) {
-      throw new Error('المدفوع سيتجاوز المشتريات؛ احذف سند الصرف أولاً');
+      throw new Error('احذف سند الصرف أولاً');
     }
     await db.supplierInvoices.delete(invoiceId);
     await recalcSupplier(invoice.supplierId);
@@ -772,10 +780,10 @@ export async function addSupplierPayment(
       const supplier = await recalcSupplier(supplierId);
 
       const value = round2(Number(input.amount) || 0);
-      if (value <= 0) throw new Error('يرجى إدخال مبلغ الدفعة');
+      if (value <= 0) throw new Error('أدخل المبلغ');
       if (value > supplier.remainingDebt + EPS) {
         throw new Error(
-          `المبلغ أكبر من الدين المتبقي للمورد (${supplier.remainingDebt.toLocaleString('ar-SA')} ₪)`
+          `أكبر من دين المورد (${supplier.remainingDebt.toLocaleString('ar-SA')} ₪)`
         );
       }
 
@@ -810,7 +818,7 @@ export async function addSupplierPayment(
         supplierName: supplier.supplierName,
         linkedPaymentId: tx.id,
         receiptAttachment: input.receiptAttachment,
-        notes: tx.notes || `سند صرف ${tx.receiptNumber}`,
+        notes: tx.notes || `سند صرف رقم ${docNo(tx.receiptNumber)}`,
         createdAt: Date.now(),
       };
       await db.expenses.add(expense);
@@ -829,6 +837,7 @@ export async function deletePayment(paymentId: string): Promise<void> {
     async () => {
       const tx = await db.paymentTransactions.get(paymentId);
       if (!tx) return;
+      assertOpen(tx);
       await db.paymentTransactions.delete(paymentId);
 
       if (tx.type === 'customer_in') {
@@ -848,7 +857,7 @@ type ExpenseInput = Omit<Partial<Expense>, 'id' | 'expenseNumber' | 'createdAt' 
 
 export async function createExpense(data: ExpenseInput): Promise<Expense> {
   const amount = round2(Number(data.amount) || 0);
-  if (amount <= 0) throw new Error('يرجى إدخال مبلغ المصروف');
+  if (amount <= 0) throw new Error('أدخل المبلغ');
   return db.transaction('rw', [db.expenses, db.settings], async () => {
     const expense: Expense = {
       id: uid('exp'),
@@ -872,13 +881,14 @@ export async function updateExpense(expenseId: string, data: ExpenseInput): Prom
   const changes: ExpenseInput = { ...data };
   if (changes.amount !== undefined) {
     changes.amount = round2(Number(changes.amount) || 0);
-    if (changes.amount <= 0) throw new Error('يرجى إدخال مبلغ المصروف');
+    if (changes.amount <= 0) throw new Error('أدخل المبلغ');
   }
   await db.transaction('rw', db.expenses, db.paymentTransactions, async () => {
     const existing = await db.expenses.get(expenseId);
     if (!existing) throw new Error('المصروف غير موجود');
+    assertOpen(existing);
     if (existing.linkedPaymentId && changes.amount !== undefined && changes.amount !== existing.amount) {
-      throw new Error('مبلغ مرتبط بسند صرف؛ لا يُعدَّل');
+      throw new Error('مرتبط بسند صرف');
     }
     await db.expenses.update(expenseId, changes);
     // المصروف وسند الصرف المرتبط به يبقيان بنفس التاريخ والوسيلة
@@ -895,15 +905,61 @@ export async function updateExpense(expenseId: string, data: ExpenseInput): Prom
 export async function deleteExpense(expenseId: string): Promise<void> {
   const existing = await db.expenses.get(expenseId);
   if (!existing) return;
+  assertOpen(existing);
   if (existing.linkedPaymentId) await deletePayment(existing.linkedPaymentId);
   await db.expenses.delete(expenseId);
+}
+
+// ───────────────────────── إقفال الأسبوع ─────────────────────────
+
+// الحركات المُرحَّلة لأسبوع مُقفل ثابتة حتى لا يتغير كشف محفوظ
+function assertOpen(x: { closingId?: string }) {
+  if (x.closingId) throw new Error('الأسبوع مُقفل');
+}
+
+// يرحّل كل الحركات المفتوحة إلى أسبوع مُقفل جديد، فيبدأ الحساب من الصفر
+export async function closeWeek(): Promise<WeekClosing> {
+  return db.transaction('rw', [db.paymentTransactions, db.expenses, db.weekClosings], async () => {
+    const payments = await db.paymentTransactions.filter((t) => !t.closingId).toArray();
+    const expenses = await db.expenses.filter((e) => !e.closingId).toArray();
+    const rows = weekLedger(payments, expenses);
+    if (!rows.length) throw new Error('لا حركات');
+
+    const today = todayISO();
+    const last = await db.weekClosings.orderBy('seq').last();
+    const lastDate = rows[rows.length - 1].date;
+    const closing: WeekClosing = {
+      id: uid('week'),
+      seq: (last?.seq ?? 0) + 1,
+      fromDate: rows[0].date,
+      toDate: lastDate > today ? lastDate : today,
+      ...ledgerTotals(rows),
+      closedAt: Date.now(),
+    };
+    await db.weekClosings.add(closing);
+    // سندات صرف الموردين تُرحَّل مع مصروفاتها المرتبطة
+    await db.paymentTransactions.bulkUpdate(payments.map((t) => ({ key: t.id, changes: { closingId: closing.id } })));
+    await db.expenses.bulkUpdate(expenses.map((e) => ({ key: e.id, changes: { closingId: closing.id } })));
+    return closing;
+  });
+}
+
+// تراجع عن آخر إقفال فقط (إن تم بالخطأ): تعود حركاته للأسبوع المفتوح
+export async function reopenLastWeek(): Promise<void> {
+  await db.transaction('rw', [db.paymentTransactions, db.expenses, db.weekClosings], async () => {
+    const last = await db.weekClosings.orderBy('seq').last();
+    if (!last) return;
+    await db.paymentTransactions.filter((t) => t.closingId === last.id).modify((t) => void delete t.closingId);
+    await db.expenses.filter((e) => e.closingId === last.id).modify((e) => void delete e.closingId);
+    await db.weekClosings.delete(last.id);
+  });
 }
 
 // ───────────────────────── احتياجات المنجرة ─────────────────────────
 
 export async function addWorkshopNeed(data: Pick<WorkshopNeed, 'title' | 'category' | 'notes'>): Promise<void> {
   const title = data.title.trim();
-  if (!title) throw new Error('يرجى إدخال اسم البند');
+  if (!title) throw new Error('أدخل البند');
   await db.workshopNeeds.add({
     id: uid('need'),
     title,
@@ -933,9 +989,10 @@ export async function exportDatabaseBackup(): Promise<string> {
   const paymentMethods = await db.paymentMethods.toArray();
   const settings = await db.settings.toArray();
   const workshopNeeds = await db.workshopNeeds.toArray();
+  const weekClosings = await db.weekClosings.toArray();
 
   const backupData = {
-    version: 4,
+    version: 5,
     exportedAt: new Date().toISOString(),
     data: {
       orders,
@@ -945,7 +1002,8 @@ export async function exportDatabaseBackup(): Promise<string> {
       paymentTransactions,
       paymentMethods,
       settings,
-      workshopNeeds
+      workshopNeeds,
+      weekClosings
     }
   };
 
@@ -955,9 +1013,14 @@ export async function exportDatabaseBackup(): Promise<string> {
 export async function importDatabaseBackup(jsonString: string): Promise<boolean> {
   try {
     const parsed = JSON.parse(jsonString);
-    if (!parsed.data) throw new Error('صيغة ملف غير صالحة');
+    if (!parsed.data) throw new Error('ملف غير صالح');
 
-    await db.transaction('rw', [db.orders, db.expenses, db.supplierDebts, db.supplierInvoices, db.paymentTransactions, db.paymentMethods, db.settings, db.workshopNeeds], async () => {
+    await db.transaction('rw', [db.orders, db.expenses, db.supplierDebts, db.supplierInvoices, db.paymentTransactions, db.paymentMethods, db.settings, db.workshopNeeds, db.weekClosings], async () => {
+      // النسخ الأقدم من v5 بلا إقفالات: كل حركاتها تعود للأسبوع المفتوح
+      await db.weekClosings.clear();
+      if (parsed.data.weekClosings) {
+        await db.weekClosings.bulkAdd(parsed.data.weekClosings);
+      }
       if (parsed.data.workshopNeeds) {
         await db.workshopNeeds.clear();
         await db.workshopNeeds.bulkAdd(parsed.data.workshopNeeds);

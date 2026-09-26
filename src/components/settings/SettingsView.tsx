@@ -23,7 +23,7 @@ import {
   wipeAllDataClean 
 } from '../../db/seedData';
 import { Modal } from '../common/Modal';
-import { StatsPinSettings, DocCodesLegend } from '../security/StatsPin';
+import { StatsPinSettings } from '../security/StatsPin';
 import type { WorkshopSettings, PaymentMethodItem, PaymentMethodType } from '../../types';
 import { ask, notify } from '../common/Dialogs';
 
@@ -91,7 +91,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
   };
 
   const handleInjectSample = async () => {
-    if (await ask('إضافة بيانات تجريبية؟', { message: 'ستُستبدل البيانات الحالية', confirmLabel: 'إضافة' })) {
+    if (await ask('إضافة بيانات تجريبية؟', { message: 'تُستبدل البيانات الحالية', confirmLabel: 'إضافة' })) {
       await injectSampleDataToDatabase();
       window.location.reload();
     }
@@ -119,7 +119,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
       if (success) {
         window.location.reload();
       } else {
-        notify('الملف غير صالح للاستيراد');
+        notify('ملف غير صالح');
       }
     };
     reader.readAsText(file);
@@ -197,7 +197,6 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
       </form>
 
       <StatsPinSettings settings={settings} />
-      <DocCodesLegend />
 
       {/* 2. Payment Methods Section (Moved entirely to Settings) */}
       <div className="bg-white p-3.5 sm:p-4 rounded-[4px] border border-slate-300 space-y-3 shadow-2xs">

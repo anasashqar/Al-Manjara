@@ -74,6 +74,7 @@ export interface Expense {
   linkedPaymentId?: string;   // سند سداد المورد الذي أنشأ هذا المصروف تلقائياً
   receiptAttachment?: string; // إشعار بنكي أو وصل
   notes?: string;
+  closingId?: string;         // الأسبوع المُقفل الذي رُحِّل إليه؛ فارغ = ضمن الأسبوع المفتوح
   createdAt: number;
 }
 
@@ -128,7 +129,21 @@ export interface PaymentTransaction {
   paymentMethod: string;    // نقداً، بنك فلسطين، محفظة جوال بي، محفظة بال بي
   receiptAttachment?: string; // صورة إشعار البنك أو المحفظة
   notes?: string;
+  closingId?: string;         // الأسبوع المُقفل الذي رُحِّل إليه؛ فارغ = ضمن الأسبوع المفتوح
   createdAt: number;
+}
+
+// إقفال أسبوع: كل الحركات غير المُقفلة تُرحَّل إليه ويبدأ الأسبوع التالي من الصفر.
+// المجاميع محفوظة كما كانت لحظة الإقفال
+export interface WeekClosing {
+  id: string;
+  seq: number;         // رقم الأسبوع المتسلسل
+  fromDate: string;    // تاريخ أقدم حركة فيه
+  toDate: string;      // تاريخ الإقفال
+  collected: number;   // المقبوضات
+  expenses: number;    // المصروفات
+  net: number;         // الصافي
+  closedAt: number;
 }
 
 // احتياجات المنجرة: قائمة مشتريات داخلية

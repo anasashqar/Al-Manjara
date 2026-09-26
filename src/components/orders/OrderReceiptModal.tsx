@@ -1,6 +1,7 @@
 import React from 'react';
 import { VoucherModal } from '../common/VoucherDocument';
 import type { Order, PaymentTransaction, WorkshopSettings } from '../../types';
+import { docNo, plainDocText, shortPurpose } from '../../utils/docNumber';
 
 interface OrderReceiptModalProps {
   isOpen: boolean;
@@ -22,16 +23,16 @@ export const OrderReceiptModal: React.FC<OrderReceiptModalProps> = ({ isOpen, on
       data={{
         kind: 'receipt',
         // بدون سند محدد: ملخص المدفوع على الطلبية برقمها
-        number: payment?.receiptNumber || order.orderNumber,
+        number: docNo(payment?.receiptNumber || order.orderNumber),
         date: payment?.date || order.orderDate,
         party: order.customerName,
         amount: payment ? payment.amount : order.paidAmount,
         discount: payment?.discountAmount || undefined,
-        purpose: payment?.itemPurpose || order.description,
+        purpose: payment ? `${shortPurpose(payment.itemPurpose)} — ${order.description}` : order.description,
         method: payment?.paymentMethod || '—',
         // المتبقي لحظة إصدار السند، حتى عند إعادة طباعة سند قديم
         remainingAfter: payment?.remainingAfter ?? order.remainingAmount,
-        notes: payment?.notes,
+        notes: payment?.notes && plainDocText(payment.notes),
       }}
     />
   );

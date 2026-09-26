@@ -7,8 +7,8 @@ import { printElementToA4 } from '../../utils/printHelper';
 import { customerKey, isActiveOrder } from '../../utils/finance';
 import { OrderReceiptModal } from './OrderReceiptModal';
 import type { Order, PaymentTransaction, WorkshopSettings } from '../../types';
-import { oldestFirst } from '../../utils/docNumber';
-import { ask } from '../common/Dialogs';
+import { docNo, oldestFirst } from '../../utils/docNumber';
+import { ask, notify } from '../common/Dialogs';
 
 interface OrderAccountModalProps {
   isOpen: boolean;
@@ -53,7 +53,12 @@ export const OrderAccountModal: React.FC<OrderAccountModalProps> = ({ isOpen, on
   };
 
   const handleVoid = async (p: PaymentTransaction) => {
-    if (await ask(`حذف السند ${p.receiptNumber}؟`)) await deletePayment(p.id);
+    if (!(await ask(`حذف السند رقم ${docNo(p.receiptNumber)}؟`))) return;
+    try {
+      await deletePayment(p.id);
+    } catch (err: any) {
+      notify(err?.message || 'تعذر الحذف');
+    }
   };
 
   const tab = (id: View, text: string) => (
@@ -84,7 +89,7 @@ export const OrderAccountModal: React.FC<OrderAccountModalProps> = ({ isOpen, on
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title={`${current.customerName} — ${current.orderNumber}`}
+      title={`${current.customerName} — طلبية ${docNo(current.orderNumber)}`}
       maxWidth="2xl"
       headerActions={
         <button
@@ -109,7 +114,7 @@ export const OrderAccountModal: React.FC<OrderAccountModalProps> = ({ isOpen, on
           <span className="font-bold text-base">{settings.workshopName}</span>
           <span className="font-bold">
             كشف حساب: {current.customerName}
-            {view === 'order' ? ` — ${current.orderNumber}` : ''}
+            {view === 'order' ? ` — طلبية ${docNo(current.orderNumber)}` : ''}
           </span>
         </div>
 
@@ -148,7 +153,7 @@ export const OrderAccountModal: React.FC<OrderAccountModalProps> = ({ isOpen, on
                       className="hover:bg-amber-50/25 transition-colors cursor-pointer"
                       title="عرض السند"
                     >
-                      <td className={`${td} font-mono font-bold`}>{p.receiptNumber}</td>
+                      <td className={`${td} font-mono font-bold`}>{docNo(p.receiptNumber)}</td>
                       <td className={`${td} font-mono`}>{p.date}</td>
                       <td className={td}>{p.paymentMethod}</td>
                       <td className={`${td} text-center font-mono font-bold text-[#15803d]`}>{fmt(p.amount)}</td>
@@ -200,7 +205,7 @@ export const OrderAccountModal: React.FC<OrderAccountModalProps> = ({ isOpen, on
               <tbody className="divide-y divide-slate-200">
                 {customerOrders.map((o) => (
                   <tr key={o.id} className={o.status === 'cancelled' ? 'text-slate-400 line-through' : ''}>
-                    <td className={`${td} font-mono font-bold`}>{o.orderNumber}</td>
+                    <td className={`${td} font-mono font-bold`}>{docNo(o.orderNumber)}</td>
                     <td className={`${td} font-mono`}>{o.orderDate}</td>
                     <td className={td}>{o.description}</td>
                     <td className={`${td} text-center font-mono`}>{fmt(o.totalAmount)}</td>
